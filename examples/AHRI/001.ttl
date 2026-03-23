@@ -1,0 +1,52 @@
+@prefix ex: <https://www.bgee.org/sparql/.well-known/sparql-examples/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <https://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+ex:001 a sh:SPARQLExecutable,
+        sh:SPARQLSelectExecutable ;
+    rdfs:comment "What are the ROIs which have the word lymph in its annotation"@en ;
+    sh:prefixes _:sparql_examples_prefixes ;
+    sh:select """PREFIX ns2: <http://www.openmicroscopy.org/rdf/2016-06/ome_core/>
+PREFIX ome:    	<http://www.openmicroscopy.org/rdf/2016-06/ome_core/>                
+PREFIX redcap: 	<https://population.ahri.org/api/>
+PREFIX rdf:    	<http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX dc:     	<http://purl.org/dc/elements/1.1/>
+PREFIX dct:		<http://purl.org/dc/terms/>
+SELECT DISTINCT ?redCapId ?redcapRecord ?omeID ?omeRecord ?specimen_source ?imagename ?ROI ?text
+WHERE {    
+  # --- REDCap records ---
+  ?redcapRecord
+    rdf:type redcap:record ;
+    redcap:specimen_source ?specimen_source ;
+    redcap:lab_id ?redCapId .
+  BIND(
+    URI(CONCAT("https://population.ahri.org/api/", REPLACE(STR(?redCapId), " ", "")))
+    AS ?redcapConstructedURI
+  )
+#  VALUES ?specimen_source {"5"}  # restrict to IALCH Forensic Pathology
+  # --- OME records ---
+  ?omeRecord ome:Map ?map ;
+  dct:isPartOf ?image  
+  .
+  ?map
+    ome:Key "lab_id_main" ;
+    ome:Value ?omeID . 
+  BIND(
+    URI(CONCAT("https://population.ahri.org/api/", STR(?omeID)))
+    AS ?omeConstructedURI
+  )
+  .	?image dct:hasPart ?pixels ; ome:Name ?imagename
+  .	?pixels rdf:type <http://www.openmicroscopy.org/Schemas/OME/2016-06#Pixels>
+	; dct:hasPart ?ROI . 
+    ?ROI rdf:type <http://www.openmicroscopy.org/Schemas/OME/2016-06#ROI> ;
+    ome:shapes ?shapes .
+	?shapes ome:Text ?text
+#    VALUES ?text{'lymph node'} .
+    FILTER REGEX(?text, 'lymph', 'i')
+#  . ?roi dct:isPartOf ?pixels; rdf:type <http://www.openmicroscopy.org/Schemas/OME/2016-06#ROI>
+
+  # --- Match records by constructed URI ---
+  FILTER(?redcapConstructedURI = ?omeConstructedURI)
+}""" ;
+    schema:target <http://localhost:7200/sparql/> .
