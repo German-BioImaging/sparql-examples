@@ -19,7 +19,7 @@ ex:001 a sh:SPARQLExecutable, sh:SPARQLSelectExecutable ;
     rdfs:comment "Select all projects and list their names and ids."^^rdf:HTML ;
     sh:prefixes _:sparql_example_prefixes ;
     schema:keywords "project" ;
-    schema:target <http://idr-sparql.uni-muenster.de/sparql> ;
+    schema:target <http://idr-sparql.uni-muenster.de/qlever-api> ;
     sh:select """
 PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
