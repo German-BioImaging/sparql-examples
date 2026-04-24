@@ -3,6 +3,13 @@
 #+property: header-args:ttl :eval no :noweb yes
 #+property: header-args:bash :noweb yes :eval query
 
+* README first!
+:PROPERTIES:
+:ID:       8235c0c9-0ef5-46f3-a826-8e4b2c67a7be
+:END:
+This readme file is the source for all example queries in this directory. Example queries should be edited here, not in the /ttl/ files. To (re-)create
+the /ttl/ files, run =org-babel-tangle=.
+
 * Prefixes
 :PROPERTIES:
 :ID:       62a37deb-cf19-46b5-acae-764cdfb04543
@@ -23,12 +30,16 @@
   prefix idr: <https://idr.openmicroscopy.org/>
 #+end_src
 
+* IDR SPARQL endpoint URL
+:PROPERTIES:
+:ID:       9e78c00b-3cee-4c11-a4ea-36ab08362808
+:END:
 #+name: idr_sparql_endpoint_url
 #+begin_src ttl
   <http://idr-sparql.uni-muenster.de/qlever-api>
 #+end_src
 
-* Generic query
+* Generic query                                                    :noexport:
 :PROPERTIES:
 :ID:       4fd8d009-3cfa-4b37-a48d-545dc00aa94e
 :END:
@@ -56,7 +67,7 @@
 | https://idr.openmicroscopy.org/WellSample/100019   | https://ld.openmicroscopy.org/core/well_index | 0 |
 | https://idr.openmicroscopy.org/WellSample/100022   | https://ld.openmicroscopy.org/core/well_index | 0 |
 
-* Uniprot example for sparql-examples
+* Uniprot example for sparql-examples                              :noexport:
 :PROPERTIES:
 :ID:       0ea5911b-0536-400e-9f93-21448269f59f
 :END:
@@ -82,12 +93,13 @@ WHERE
     schema:keywords "taxonomy" ;
     schema:target <https://sparql.uniprot.org/sparql/> .
 
-* Skeleton code
+* TTL prefixes
 :PROPERTIES:
 :ID:       00c0e6ad-e529-41e3-be5b-907ad2a55bc8
 :END:
 
 #+name: ttl-prefixes
+#+caption: RDF prefix declarations in turtle syntax
 #+begin_src ttl
   @prefix dc: <http://purl.org/dc/elements/1.1/>
   @prefix dcterms: <http://purl.org/dc/terms/>
@@ -133,7 +145,7 @@ WHERE
   """ .
 #+end_src
 
-#+begin_src sparql :noweb-ref 001-sparql
+#+begin_src sparql :noweb-ref 001-sparql :exports results
   <<idr-prefixes>>
 
   select ?project ?name ?id where {
