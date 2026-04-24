@@ -39,61 +39,12 @@ the /ttl/ files, run =org-babel-tangle=.
   <http://idr-sparql.uni-muenster.de/qlever-api>
 #+end_src
 
-* Generic query                                                    :noexport:
+* Example queries
 :PROPERTIES:
-:ID:       4fd8d009-3cfa-4b37-a48d-545dc00aa94e
+:ID:       988fb935-973a-49e0-b700-461fdf65f5ec
 :END:
 
-
-#+begin_src sparql :results output text
-  <<idr-prefixes>>
-  select * where {
-    ?s ?p ?o
-    }
-  limit 10
-#+end_src
-
-#+RESULTS[9d1cd8c04fe6d4a05c9505522a83a4aada981198]:
-| s                                                  | p                                             | o |
-|----------------------------------------------------+-----------------------------------------------+---|
-| https://idr.openmicroscopy.org/Experimenter/0      | http://purl.org/dc/elements/1.1/identifier    | 0 |
-| https://idr.openmicroscopy.org/ExperimenterGroup/0 | http://purl.org/dc/elements/1.1/identifier    | 0 |
-| https://idr.openmicroscopy.org/WellSample/100001   | https://ld.openmicroscopy.org/core/well_index | 0 |
-| https://idr.openmicroscopy.org/WellSample/100004   | https://ld.openmicroscopy.org/core/well_index | 0 |
-| https://idr.openmicroscopy.org/WellSample/100007   | https://ld.openmicroscopy.org/core/well_index | 0 |
-| https://idr.openmicroscopy.org/WellSample/100010   | https://ld.openmicroscopy.org/core/well_index | 0 |
-| https://idr.openmicroscopy.org/WellSample/100013   | https://ld.openmicroscopy.org/core/well_index | 0 |
-| https://idr.openmicroscopy.org/WellSample/100016   | https://ld.openmicroscopy.org/core/well_index | 0 |
-| https://idr.openmicroscopy.org/WellSample/100019   | https://ld.openmicroscopy.org/core/well_index | 0 |
-| https://idr.openmicroscopy.org/WellSample/100022   | https://ld.openmicroscopy.org/core/well_index | 0 |
-
-* Uniprot example for sparql-examples                              :noexport:
-:PROPERTIES:
-:ID:       0ea5911b-0536-400e-9f93-21448269f59f
-:END:
-[[file:~/Repositories/sparql-examples/examples/UniProt/1_select_all_taxa_used_in_uniprot.ttl]]
-@prefix ex: <https://sparql.uniprot.org/.well-known/sparql-examples/> .
-@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix schema: <https://schema.org/> .
-@prefix sh: <http://www.w3.org/ns/shacl#> .
-
-ex:1 a sh:SPARQLExecutable,
-        sh:SPARQLSelectExecutable ;
-    rdfs:comment "Select all taxa from the <a href=\"https://www.uniprot.org/taxonomy/\">UniProt taxonomy</a>"^^rdf:HTML ;
-    sh:prefixes _:sparql_examples_prefixes ;
-    sh:select """PREFIX up: <http://purl.uniprot.org/core/>
-
-SELECT ?taxon
-FROM <http://sparql.uniprot.org/taxonomy>
-WHERE
-{
-    ?taxon a up:Taxon .
-}""" ;
-    schema:keywords "taxonomy" ;
-    schema:target <https://sparql.uniprot.org/sparql/> .
-
-* TTL prefixes
+** TTL prefixes
 :PROPERTIES:
 :ID:       00c0e6ad-e529-41e3-be5b-907ad2a55bc8
 :END:
@@ -119,11 +70,6 @@ WHERE
 
 #+end_src
 
-* Example queries
-:PROPERTIES:
-:ID:       988fb935-973a-49e0-b700-461fdf65f5ec
-:END:
-
 ** All projects with names and IDs
 :PROPERTIES:
 :ID:       da8e59c5-d071-4e02-b07e-3cf9c6fb989a
@@ -132,7 +78,7 @@ WHERE
   Select all projects and list their names and ids.
 #+end_src
 #+name: 001-skeleton
-#+begin_src ttl :tangle 001--all_projects.ttl
+#+begin_src ttl :tangle 001--all_projects.ttl :exports none
   <<ttl-prefixes>>
 
   ex:001 a sh:SPARQLExecutable, sh:SPARQLSelectExecutable ;
@@ -145,7 +91,7 @@ WHERE
   """ .
 #+end_src
 
-#+begin_src sparql :noweb-ref 001-sparql :exports results
+#+begin_src sparql :noweb-ref 001-sparql :exports both
   <<idr-prefixes>>
 
   select ?project ?name ?id where {
