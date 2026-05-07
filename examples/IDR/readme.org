@@ -1,5 +1,5 @@
 #+title: Example SPARQL queries for IDR
-#+property: header-args:sparql :url http://idr-sparql.uni-muenster.de/qlever-api :async yes :results output table replace :cache yes :exports both :noweb yes
+#+property: header-args:sparql :url http://idr-sparql.uni-muenster.de/qlever/sparql :async yes :results output table replace :cache yes :exports both :noweb yes
 #+property: header-args:ttl :eval no :noweb yes
 #+property: header-args:bash :noweb yes :eval query
 
@@ -8,12 +8,21 @@
 :ID:       8235c0c9-0ef5-46f3-a826-8e4b2c67a7be
 :END:
 This readme file is the source for all example queries in this directory. Example queries should be edited here, not in the /ttl/ files. To (re-)create
-the /ttl/ files, run =org-babel-tangle=.
+the /ttl/ files, run =org-babel-tangle= in emacs.
 
-* Prefixes
+* Setup
+:PROPERTIES:
+:ID:       6045d575-e758-402e-a654-0e6cfe179e51
+:END:
+
+** SPARQL Prefixes
 :PROPERTIES:
 :ID:       62a37deb-cf19-46b5-acae-764cdfb04543
 :END:
+Here we define commonly used prefixes in =sparql= syntax to be included into
+=sparql= source code blocks by adding the line =<<idr-prefixes>>= somewhere in
+the block (probably somewhere near the top ;).
+
 #+name: idr-prefixes
 #+begin_src sparql :eval no
   PREFIX owl: <http://www.w3.org/2002/07/owl#>
@@ -30,24 +39,11 @@ the /ttl/ files, run =org-babel-tangle=.
   prefix idr: <https://idr.openmicroscopy.org/>
 #+end_src
 
-* IDR SPARQL endpoint URL
-:PROPERTIES:
-:ID:       9e78c00b-3cee-4c11-a4ea-36ab08362808
-:END:
-#+name: idr_sparql_endpoint_url
-#+begin_src ttl
-  <http://idr-sparql.uni-muenster.de/qlever-api>
-#+end_src
-
-* Example queries
-:PROPERTIES:
-:ID:       988fb935-973a-49e0-b700-461fdf65f5ec
-:END:
-
 ** TTL prefixes
 :PROPERTIES:
 :ID:       00c0e6ad-e529-41e3-be5b-907ad2a55bc8
 :END:
+Common prefixes in =ttl= syntax go here and can be included into =ttl= snippets by adding a =<<ttl-prefixes>>= noweb block.
 
 #+name: ttl-prefixes
 #+caption: RDF prefix declarations in turtle syntax
@@ -70,6 +66,29 @@ the /ttl/ files, run =org-babel-tangle=.
 
 #+end_src
 
+** IDR SPARQL endpoint URL
+:PROPERTIES:
+:ID:       9e78c00b-3cee-4c11-a4ea-36ab08362808
+:END:
+#+name: idr_sparql_endpoint_url
+#+begin_src ttl
+  <http://idr-sparql.uni-muenster.de/qlever/sparql>
+#+end_src
+
+*** Test endpoint is alive
+:PROPERTIES:
+:ID:       d6fcfaed-1902-41df-b9c3-64582542c537
+:END:
+#+begin_src bash
+#+end_src
+
+#+RESULTS:
+
+* Example queries
+:PROPERTIES:
+:ID:       988fb935-973a-49e0-b700-461fdf65f5ec
+:END:
+
 ** All projects with names and IDs
 :PROPERTIES:
 :ID:       da8e59c5-d071-4e02-b07e-3cf9c6fb989a
@@ -91,7 +110,8 @@ the /ttl/ files, run =org-babel-tangle=.
   """ .
 #+end_src
 
-#+begin_src sparql :noweb-ref 001-sparql :exports both
+#+name: 001-sparql
+#+begin_src sparql :exports both
   <<idr-prefixes>>
 
   select ?project ?name ?id where {
@@ -102,8 +122,7 @@ the /ttl/ files, run =org-babel-tangle=.
   order by ?id
 #+end_src
 
-
-#+RESULTS[442669109402c90ce1a1ac2987c6025d59d2166a]: 001-sparql
+#+RESULTS[5eda01519bccb5bd33a79ad207f0cb363fa20d7a]:
 | project                                     | name                                             |   id |
 |---------------------------------------------+--------------------------------------------------+------|
 | https://idr.openmicroscopy.org/Project/51   | idr0021-lawo-pericentriolarmaterial/experimentA  |   51 |
@@ -232,17 +251,151 @@ the /ttl/ files, run =org-babel-tangle=.
 | https://idr.openmicroscopy.org/Project/2852 | idr0155-fu-alphasynuclein/experimentA            | 2852 |
 | https://idr.openmicroscopy.org/Project/2902 | idr0157-peters-bryophytes/experimentA            | 2902 |
 
+
 ** More project properties
 :PROPERTIES:
 :ID:       b7228686-56a0-4c7c-959f-5cf8ab1565f3
 :END:
 #+begin_src sparql
   <<idr-prefixes>>
-  select * where {
-    ?project
+  select distinct ?project_property where {
+    ?project a omecore:Project ;
+             ?project_property ?val .
+    }
 #+end_src
 
+#+RESULTS[e6dbdfb098bc38c764698da601fb14b423eb007b]:
+| project_property                                      |
+|-------------------------------------------------------|
+| http://purl.org/dc/elements/1.1/identifier            |
+| http://purl.org/dc/terms/hasPart                      |
+| http://www.w3.org/1999/02/22-rdf-syntax-ns#type       |
+| http://www.w3.org/2000/01/rdf-schema#comment          |
+| http://www.w3.org/2000/01/rdf-schema#label            |
+| https://ld.openmicroscopy.org/core/experimenter_group |
+| https://ld.openmicroscopy.org/core/experimenter       |
+| https://ld.openmicroscopy.org/core/hasAnnotation      |
 
 
+** Image Key-Value annotations
+:PROPERTIES:
+:ID:       bdfc0f49-47af-4728-8828-416ee0aa1e20
+:END:
+#+begin_src sparql
+  <<idr-prefixes>>
+
+  select distinct * where {
+    <https://idr.openmicroscopy.org/Project/52> 
+             dcterms:hasPart/dcterms:hasPart ?img .
+    ?img a omecore:Image ;
+         omecore:hasAnnotation/omecore:mapEntry [omecore:key ?key; omecore:value ?value] .
+    }
+  order by ?img
+  limit 100
+#+end_src
+
+#+RESULTS[ff46a552b0ea0994cd8bad0a12f46fffe825bfcb]:
+| img                                          | key                          | value                                                                                             |
+|----------------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------|
+| https://idr.openmicroscopy.org/Image/1885617 | Cell Line                    | U2OS                                                                                              |
+| https://idr.openmicroscopy.org/Image/1885617 | Antibody                     | Nup107-aa33-51 antibody                                                                           |
+| https://idr.openmicroscopy.org/Image/1885617 | Targeted Protein URL         | http://www.ebi.ac.uk/pdbe/entry/search/index?text:Nup107                                          |
+| https://idr.openmicroscopy.org/Image/1885617 | Targeted Protein             | Nup107                                                                                            |
+| https://idr.openmicroscopy.org/Image/1885617 | Replicate Group              | Nup107-aa33-51_antibody_1                                                                         |
+| https://idr.openmicroscopy.org/Image/1885617 | Phenotype Term Name          | protein localized in nuclear pore phenotype                                                       |
+| https://idr.openmicroscopy.org/Image/1885617 | Phenotype Term Accession URL | http://www.ebi.ac.uk/cmpo/CMPO_0000426                                                            |
+| https://idr.openmicroscopy.org/Image/1885617 | Phenotype Term Accession     | CMPO_0000426                                                                                      |
+| https://idr.openmicroscopy.org/Image/1885617 | Phenotype Annotation Level   | experimental condition and protein                                                                |
+| https://idr.openmicroscopy.org/Image/1885617 | Phenotype                    | protein localized in nuclear pore                                                                 |
+| https://idr.openmicroscopy.org/Image/1885617 | Image File Type              | derived                                                                                           |
+| https://idr.openmicroscopy.org/Image/1885617 | Organism                     | Homo sapiens                                                                                      |
+| https://idr.openmicroscopy.org/Image/1885617 | Channels                     | greyscale                                                                                         |
+| https://idr.openmicroscopy.org/Image/1885617 | Gene Annotation Comments     | Gene identifiers and symbols from GRCh38.p5, Ensembl release 84, Mar 2016. Added by IDR curators. |
+| https://idr.openmicroscopy.org/Image/1885617 | Gene Identifier              | ENSG00000111581                                                                                   |
+| https://idr.openmicroscopy.org/Image/1885617 | Gene Identifier URL          | http://www.ensembl.org/id/ENSG00000111581                                                         |
+| https://idr.openmicroscopy.org/Image/1885617 | Gene Symbol                  | NUP107                                                                                            |
+| https://idr.openmicroscopy.org/Image/1885617 | Gene Symbol Synonyms         | NUP84                                                                                             |
+| https://idr.openmicroscopy.org/Image/1885617 | Has Phenotype                | yes                                                                                               |
+| https://idr.openmicroscopy.org/Image/1885618 | Organism                     | Homo sapiens                                                                                      |
+| https://idr.openmicroscopy.org/Image/1885618 | Targeted Protein URL         | http://www.ebi.ac.uk/pdbe/entry/search/index?text:Nup107                                          |
+| https://idr.openmicroscopy.org/Image/1885618 | Targeted Protein             | Nup107                                                                                            |
+| https://idr.openmicroscopy.org/Image/1885618 | Replicate Group              | Nup107-aa33-51_antibody_1                                                                         |
+| https://idr.openmicroscopy.org/Image/1885618 | Phenotype Term Name          | protein localized in nuclear pore phenotype                                                       |
+| https://idr.openmicroscopy.org/Image/1885618 | Phenotype Term Accession URL | http://www.ebi.ac.uk/cmpo/CMPO_0000426                                                            |
+| https://idr.openmicroscopy.org/Image/1885618 | Phenotype Term Accession     | CMPO_0000426                                                                                      |
+| https://idr.openmicroscopy.org/Image/1885618 | Phenotype Annotation Level   | experimental condition and protein                                                                |
+| https://idr.openmicroscopy.org/Image/1885618 | Phenotype                    | protein localized in nuclear pore                                                                 |
+| https://idr.openmicroscopy.org/Image/1885618 | Image File Type              | derived                                                                                           |
+| https://idr.openmicroscopy.org/Image/1885618 | Has Phenotype                | yes                                                                                               |
+| https://idr.openmicroscopy.org/Image/1885618 | Gene Symbol Synonyms         | NUP84                                                                                             |
+| https://idr.openmicroscopy.org/Image/1885618 | Gene Symbol                  | NUP107                                                                                            |
+| https://idr.openmicroscopy.org/Image/1885618 | Gene Identifier URL          | http://www.ensembl.org/id/ENSG00000111581                                                         |
+| https://idr.openmicroscopy.org/Image/1885618 | Gene Identifier              | ENSG00000111581                                                                                   |
+| https://idr.openmicroscopy.org/Image/1885618 | Gene Annotation Comments     | Gene identifiers and symbols from GRCh38.p5, Ensembl release 84, Mar 2016. Added by IDR curators. |
+| https://idr.openmicroscopy.org/Image/1885618 | Channels                     | greyscale                                                                                         |
+| https://idr.openmicroscopy.org/Image/1885618 | Cell Line                    | U2OS                                                                                              |
+| https://idr.openmicroscopy.org/Image/1885618 | Antibody                     | Nup107-aa33-51 antibody                                                                           |
+| https://idr.openmicroscopy.org/Image/1885619 | Organism                     | Homo sapiens                                                                                      |
+| https://idr.openmicroscopy.org/Image/1885619 | Phenotype                    | protein localized in nuclear pore                                                                 |
+| https://idr.openmicroscopy.org/Image/1885619 | Phenotype Annotation Level   | experimental condition and protein                                                                |
+| https://idr.openmicroscopy.org/Image/1885619 | Phenotype Term Accession     | CMPO_0000426                                                                                      |
+| https://idr.openmicroscopy.org/Image/1885619 | Phenotype Term Accession URL | http://www.ebi.ac.uk/cmpo/CMPO_0000426                                                            |
+| https://idr.openmicroscopy.org/Image/1885619 | Phenotype Term Name          | protein localized in nuclear pore phenotype                                                       |
+| https://idr.openmicroscopy.org/Image/1885619 | Replicate Group              | Nup107-aa33-51_antibody_1                                                                         |
+| https://idr.openmicroscopy.org/Image/1885619 | Targeted Protein             | Nup107                                                                                            |
+| https://idr.openmicroscopy.org/Image/1885619 | Targeted Protein URL         | http://www.ebi.ac.uk/pdbe/entry/search/index?text:Nup107                                          |
+| https://idr.openmicroscopy.org/Image/1885619 | Antibody                     | Nup107-aa33-51 antibody                                                                           |
+| https://idr.openmicroscopy.org/Image/1885619 | Has Phenotype                | yes                                                                                               |
+| https://idr.openmicroscopy.org/Image/1885619 | Gene Symbol Synonyms         | NUP84                                                                                             |
+| https://idr.openmicroscopy.org/Image/1885619 | Gene Symbol                  | NUP107                                                                                            |
+| https://idr.openmicroscopy.org/Image/1885619 | Gene Identifier URL          | http://www.ensembl.org/id/ENSG00000111581                                                         |
+| https://idr.openmicroscopy.org/Image/1885619 | Gene Identifier              | ENSG00000111581                                                                                   |
+| https://idr.openmicroscopy.org/Image/1885619 | Gene Annotation Comments     | Gene identifiers and symbols from GRCh38.p5, Ensembl release 84, Mar 2016. Added by IDR curators. |
+| https://idr.openmicroscopy.org/Image/1885619 | Channels                     | greyscale                                                                                         |
+| https://idr.openmicroscopy.org/Image/1885619 | Cell Line                    | U2OS                                                                                              |
+| https://idr.openmicroscopy.org/Image/1885619 | Image File Type              | derived                                                                                           |
+| https://idr.openmicroscopy.org/Image/1885620 | Organism                     | Homo sapiens                                                                                      |
+| https://idr.openmicroscopy.org/Image/1885620 | Phenotype                    | protein localized in nuclear pore                                                                 |
+| https://idr.openmicroscopy.org/Image/1885620 | Phenotype Annotation Level   | experimental condition and protein                                                                |
+| https://idr.openmicroscopy.org/Image/1885620 | Phenotype Term Accession     | CMPO_0000426                                                                                      |
+| https://idr.openmicroscopy.org/Image/1885620 | Phenotype Term Accession URL | http://www.ebi.ac.uk/cmpo/CMPO_0000426                                                            |
+| https://idr.openmicroscopy.org/Image/1885620 | Phenotype Term Name          | protein localized in nuclear pore phenotype                                                       |
+| https://idr.openmicroscopy.org/Image/1885620 | Replicate Group              | Nup107-aa33-51_antibody_1                                                                         |
+| https://idr.openmicroscopy.org/Image/1885620 | Targeted Protein             | Nup107                                                                                            |
+| https://idr.openmicroscopy.org/Image/1885620 | Targeted Protein URL         | http://www.ebi.ac.uk/pdbe/entry/search/index?text:Nup107                                          |
+| https://idr.openmicroscopy.org/Image/1885620 | Antibody                     | Nup107-aa33-51 antibody                                                                           |
+| https://idr.openmicroscopy.org/Image/1885620 | Has Phenotype                | yes                                                                                               |
+| https://idr.openmicroscopy.org/Image/1885620 | Image File Type              | raw                                                                                               |
+| https://idr.openmicroscopy.org/Image/1885620 | Cell Line                    | U2OS                                                                                              |
+| https://idr.openmicroscopy.org/Image/1885620 | Channels                     | greyscale                                                                                         |
+| https://idr.openmicroscopy.org/Image/1885620 | Gene Annotation Comments     | Gene identifiers and symbols from GRCh38.p5, Ensembl release 84, Mar 2016. Added by IDR curators. |
+| https://idr.openmicroscopy.org/Image/1885620 | Gene Identifier              | ENSG00000111581                                                                                   |
+| https://idr.openmicroscopy.org/Image/1885620 | Gene Identifier URL          | http://www.ensembl.org/id/ENSG00000111581                                                         |
+| https://idr.openmicroscopy.org/Image/1885620 | Gene Symbol                  | NUP107                                                                                            |
+| https://idr.openmicroscopy.org/Image/1885620 | Gene Symbol Synonyms         | NUP84                                                                                             |
+| https://idr.openmicroscopy.org/Image/1885621 | Targeted Protein URL         | http://www.ebi.ac.uk/pdbe/entry/search/index?text:Nup107                                          |
+| https://idr.openmicroscopy.org/Image/1885621 | Targeted Protein             | Nup107                                                                                            |
+| https://idr.openmicroscopy.org/Image/1885621 | Replicate Group              | Nup107-aa33-51_antibody_1                                                                         |
+| https://idr.openmicroscopy.org/Image/1885621 | Phenotype Term Name          | protein localized in nuclear pore phenotype                                                       |
+| https://idr.openmicroscopy.org/Image/1885621 | Phenotype Term Accession URL | http://www.ebi.ac.uk/cmpo/CMPO_0000426                                                            |
+| https://idr.openmicroscopy.org/Image/1885621 | Phenotype Term Accession     | CMPO_0000426                                                                                      |
+| https://idr.openmicroscopy.org/Image/1885621 | Phenotype Annotation Level   | experimental condition and protein                                                                |
+| https://idr.openmicroscopy.org/Image/1885621 | Phenotype                    | protein localized in nuclear pore                                                                 |
+| https://idr.openmicroscopy.org/Image/1885621 | Organism                     | Homo sapiens                                                                                      |
+| https://idr.openmicroscopy.org/Image/1885621 | Has Phenotype                | yes                                                                                               |
+| https://idr.openmicroscopy.org/Image/1885621 | Gene Symbol Synonyms         | NUP84                                                                                             |
+| https://idr.openmicroscopy.org/Image/1885621 | Gene Symbol                  | NUP107                                                                                            |
+| https://idr.openmicroscopy.org/Image/1885621 | Gene Identifier URL          | http://www.ensembl.org/id/ENSG00000111581                                                         |
+| https://idr.openmicroscopy.org/Image/1885621 | Gene Identifier              | ENSG00000111581                                                                                   |
+| https://idr.openmicroscopy.org/Image/1885621 | Gene Annotation Comments     | Gene identifiers and symbols from GRCh38.p5, Ensembl release 84, Mar 2016. Added by IDR curators. |
+| https://idr.openmicroscopy.org/Image/1885621 | Channels                     | greyscale                                                                                         |
+| https://idr.openmicroscopy.org/Image/1885621 | Cell Line                    | U2OS                                                                                              |
+| https://idr.openmicroscopy.org/Image/1885621 | Antibody                     | Nup107-aa33-51 antibody                                                                           |
+| https://idr.openmicroscopy.org/Image/1885621 | Image File Type              | raw                                                                                               |
+| https://idr.openmicroscopy.org/Image/1885622 | Organism                     | Homo sapiens                                                                                      |
+| https://idr.openmicroscopy.org/Image/1885622 | Phenotype                    | protein localized in nuclear pore                                                                 |
+| https://idr.openmicroscopy.org/Image/1885622 | Phenotype Annotation Level   | experimental condition and protein                                                                |
+| https://idr.openmicroscopy.org/Image/1885622 | Phenotype Term Accession     | CMPO_0000426                                                                                      |
+| https://idr.openmicroscopy.org/Image/1885622 | Phenotype Term Accession URL | http://www.ebi.ac.uk/cmpo/CMPO_0000426                                                            |
 
 
