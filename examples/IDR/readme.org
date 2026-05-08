@@ -36,9 +36,9 @@ the block (probably somewhere near the top ;).
   PREFIX xml: <http://www.w3.org/XML/1998/namespace/>
   PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
   PREFIX kv: <http://www.openmicroscopy.org/ns/default/>
-  prefix idr: <https://idr.openmicroscopy.org/>
-  prefix up: <http://purl.uniprot.org/core/>
-  prefix skos: <http://www.w3.org/2004/02/skos/core#>
+  PREFIX idr: <https://idr.openmicroscopy.org/>
+  PREFIX up: <http://purl.uniprot.org/core/>
+  PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 #+end_src
 
 ** TTL prefixes
@@ -50,21 +50,21 @@ Common prefixes in =ttl= syntax go here and can be included into =ttl= snippets 
 #+name: ttl-prefixes
 #+caption: RDF prefix declarations in turtle syntax
 #+begin_src ttl
-  @prefix dc: <http://purl.org/dc/elements/1.1/>
-  @prefix dcterms: <http://purl.org/dc/terms/>
-  @prefix ex: <https://sparql.uniprot.org/.well-known/sparql-examples/> .
-  @prefix idr: <https://idr.openmicroscopy.org/>
-  @prefix kv: <http://www.openmicroscopy.org/ns/default/>
-  @prefix obda: <https://w3id.org/obda/vocabulary#>
-  @prefix omecore: <https://ld.openmicroscopy.org/core/>
-  @prefix omekg: <https://ld.openmicroscopy.org/omekg#>
-  @prefix owl: <http://www.w3.org/2002/07/owl#>
-  @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-  @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-  @prefix schema: <https://schema.org/> .
-  @prefix sh: <http://www.w3.org/ns/shacl#> .
-  @prefix xml: <http://www.w3.org/XML/1998/namespace/>
-  @prefix xsd: <http://www.w3.org/2001/XMLSchema#>
+  @PREFIX dc: <http://purl.org/dc/elements/1.1/>
+  @PREFIX dcterms: <http://purl.org/dc/terms/>
+  @PREFIX ex: <https://sparql.uniprot.org/.well-known/sparql-examples/> .
+  @PREFIX idr: <https://idr.openmicroscopy.org/>
+  @PREFIX kv: <http://www.openmicroscopy.org/ns/default/>
+  @PREFIX obda: <https://w3id.org/obda/vocabulary#>
+  @PREFIX omecore: <https://ld.openmicroscopy.org/core/>
+  @PREFIX omekg: <https://ld.openmicroscopy.org/omekg#>
+  @PREFIX owl: <http://www.w3.org/2002/07/owl#>
+  @PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+  @PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+  @PREFIX schema: <https://schema.org/> .
+  @PREFIX sh: <http://www.w3.org/ns/shacl#> .
+  @PREFIX xml: <http://www.w3.org/XML/1998/namespace/>
+  @PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
 #+end_src
 
@@ -146,14 +146,26 @@ Common prefixes in =ttl= syntax go here and can be included into =ttl= snippets 
 :ID:       22fb3c6f-c693-4d57-9f12-8fb3c51cd478
 :END:
 
-:PROPERTIES:
-:ID:       bdfc0f49-47af-4728-8828-416ee0aa1e20
-:#END:
+In this query, we use the gene identifier annotations of images in a IDR Project
+to find the protein encoded by the annotated gene. We're making use of the fact that Uniprot
+proteins are cross referenced to genes in the =bgee= database and the bgee accession numbers are
+the gene identifiers, e.g.
+#+begin_src ttl :eval no
+  @prefix up: <http://purl.uniprot.org/uniprot/> .
+  @prefix bgee: <http://purl.uniprot.org/bgee/> .
+  ...
+  <P57740> a up:Protein ;
+      ...
+      rdfs:seeAlso bgee:<http://purl.uniprot.org/bgee/ENSG00000111581> ,
+      ...
+#+end_src
 
+This enables queries to Uniprot that find a protein encoded by a gene with a given gene identifier:
 #+name: sparql.uniprot.protein_gene
-
-#+begin_src sparql :url https://sparql.uniprot.org/sparql :cache no
+#+begin_src sparql :url https://sparql.uniprot.org/sparql :cache no :eval no-export
   <<idr-prefixes>>
+  prefix bgee: <http://purl.uniprot.org/bgee/>
+
   select distinct ?up_protein  where {
           ?up_protein a up:Protein ;
                       up:reviewed true ;
@@ -169,31 +181,571 @@ Common prefixes in =ttl= syntax go here and can be included into =ttl= snippets 
 | http://purl.uniprot.org/uniprot/P57740 |
 
 
+We wrap Query [[ref:sparql.uniprot.protein_gene]] in a =service= statement as follows, to find the protein encoded by a gene being referenced
+in the "Gene Identifier" key-value annotation:
+
+#+name: sparql.idr-to-uniprot.protein_gene
     #+begin_src sparql
       <<idr-prefixes>>
-      prefix omekv: <https://ld.openmicroscopy.org/kv#>
-      select distinct ?img ?value ?up_protein where {
+      prefix bgee: <http://purl.uniprot.org/bgee/>
+
+      select distinct ?img ?bgee ?up_protein where {
         <https://idr.openmicroscopy.org/Project/52>
-                 dcterms:hasPart/dcterms:hasPart ?img .
+        dcterms:hasPart/dcterms:hasPart ?img .
         ?img a omecore:Image ;
              omecore:hasAnnotation/omecore:mapEntry [omecore:key ?key; omecore:value ?value] .
+        filter(?key = "Gene Identifier")
+        bind(iri(concat(str(bgee:),?value)) as ?bgee) .
 
-        filter(?key="Gene Identifier")
-
-        service <https://sparql.uniprot.org/sparql> {
-          select ?up_protein where {
-            ?up_protein a up:Protein ;
-                        up:reviewed true ;
-                        rdfs:seeAlso ?xref .
-            filter(contains(str(?xref), str(?value)))
+        SERVICE <https://qlever.dev/api/uniprot> {
+          ?up_protein a up:Protein ;
+                      up:reviewed true ;
+                      rdfs:seeAlso ?bgee .
           }
-        }
       }
-      limit 10
 #+end_src
 
-#+RESULTS[d803f728d1d30e5a78d6aed13479af294a266e00]:
-| img | value | up_protein |
-|-----+-------+------------|
+#+RESULTS[59bc0b992b17aa4f28eb103a7862d972252511f6]:
+| img                                          | bgee                                         | up_protein                             |
+|----------------------------------------------+----------------------------------------------+----------------------------------------|
+| https://idr.openmicroscopy.org/Image/1885617 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885618 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885619 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885620 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885621 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885622 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885623 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885624 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885625 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885626 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885627 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885628 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885629 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885630 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885631 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885632 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885633 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885634 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885635 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885636 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885637 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885638 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885639 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885640 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885641 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885642 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885643 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885644 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885645 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885646 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885647 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885648 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885649 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885650 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885651 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885652 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885653 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885654 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885655 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885656 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885657 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885658 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885659 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885660 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885661 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885662 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885663 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885664 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885665 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885666 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885667 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885668 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885669 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885670 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885671 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885672 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885673 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885674 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885675 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885676 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885677 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885678 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885679 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885680 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885681 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885682 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885683 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885684 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885685 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885686 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885687 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885688 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885689 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885690 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885691 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885692 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885693 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885694 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885695 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885696 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885697 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885698 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885699 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885700 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885701 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885702 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885703 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885704 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885705 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885706 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885707 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885708 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885709 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885710 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885711 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885712 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885713 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885714 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885715 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885716 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885717 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885718 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885719 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885720 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885721 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885722 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885723 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885724 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885725 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885726 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885727 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885728 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885729 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885730 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885731 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885732 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885733 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885734 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885735 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885736 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885737 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885738 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885739 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885740 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885741 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885742 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885743 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885744 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885745 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885746 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885747 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885748 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885749 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885750 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885751 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885752 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885753 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885754 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885755 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885756 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885757 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885758 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885759 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885760 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885761 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885762 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885763 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885764 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885765 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885766 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885767 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885768 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885769 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885770 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885771 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885772 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885773 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885774 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885775 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885776 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885777 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885778 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885779 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885780 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885781 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885782 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885783 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885784 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885785 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885786 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885787 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885788 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885789 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885790 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885791 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885792 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885793 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885794 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885795 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885796 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885797 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885798 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885799 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885800 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885801 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885802 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885803 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885804 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885805 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885806 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885807 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885808 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885809 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885810 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885811 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885812 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885813 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885814 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885815 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885816 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885817 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885818 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885819 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885820 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885821 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885822 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885823 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885824 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885825 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885826 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885827 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885828 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885829 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885830 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885831 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885832 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885833 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885834 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885835 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885836 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885837 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885838 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885839 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885840 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885841 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885842 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885843 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885844 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
+| https://idr.openmicroscopy.org/Image/1885845 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885846 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885847 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885848 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885849 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885850 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885851 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885852 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885853 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885854 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885855 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885856 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885857 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885858 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885859 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885860 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885861 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885862 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885863 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885864 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885865 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885866 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885867 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885868 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885869 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
+| https://idr.openmicroscopy.org/Image/1885870 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
+| https://idr.openmicroscopy.org/Image/1885871 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
+| https://idr.openmicroscopy.org/Image/1885872 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
+| https://idr.openmicroscopy.org/Image/1885873 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
+| https://idr.openmicroscopy.org/Image/1885874 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
+| https://idr.openmicroscopy.org/Image/1885875 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
+| https://idr.openmicroscopy.org/Image/1885876 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
+| https://idr.openmicroscopy.org/Image/1885877 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
+| https://idr.openmicroscopy.org/Image/1885878 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
+| https://idr.openmicroscopy.org/Image/1885879 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
+| https://idr.openmicroscopy.org/Image/1885880 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
+| https://idr.openmicroscopy.org/Image/1885881 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
+| https://idr.openmicroscopy.org/Image/1885882 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
+| https://idr.openmicroscopy.org/Image/1885883 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
+| https://idr.openmicroscopy.org/Image/1885884 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
+| https://idr.openmicroscopy.org/Image/1885885 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
+| https://idr.openmicroscopy.org/Image/1885886 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
+| https://idr.openmicroscopy.org/Image/1885887 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
+| https://idr.openmicroscopy.org/Image/1885888 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
+| https://idr.openmicroscopy.org/Image/1885889 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
+| https://idr.openmicroscopy.org/Image/1885890 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
+| https://idr.openmicroscopy.org/Image/1885891 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
+| https://idr.openmicroscopy.org/Image/1885892 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
+| https://idr.openmicroscopy.org/Image/1885893 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
+| https://idr.openmicroscopy.org/Image/1885894 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
+| https://idr.openmicroscopy.org/Image/1885895 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
+| https://idr.openmicroscopy.org/Image/1885896 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
+| https://idr.openmicroscopy.org/Image/1885897 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
+| https://idr.openmicroscopy.org/Image/1885898 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885899 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885900 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885901 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885902 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885903 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885904 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885905 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885906 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885907 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885908 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885909 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885910 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885911 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885912 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885913 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885914 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885915 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885916 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885917 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885918 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885919 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885920 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885921 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885922 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885923 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885924 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885925 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885926 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885927 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885928 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885929 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885930 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885931 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885932 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885933 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885934 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885935 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885936 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885937 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885938 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885939 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885940 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885941 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885942 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885943 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885944 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885945 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885946 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885947 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885948 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885949 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885950 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885951 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885952 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885953 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885954 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885955 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885956 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885957 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885958 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885959 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885960 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885961 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885962 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885963 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885964 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885965 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885966 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885967 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885968 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885969 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885970 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
+| https://idr.openmicroscopy.org/Image/1885971 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885972 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885973 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885974 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885975 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885976 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885977 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885978 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885979 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885980 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885981 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885982 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885983 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885984 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885985 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885986 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885987 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885988 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885989 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885990 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885991 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885992 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885993 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885994 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885995 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1885996 | http://purl.uniprot.org/bgee/ENSG00000125450 | http://purl.uniprot.org/uniprot/Q9BW27 |
+| https://idr.openmicroscopy.org/Image/1885997 | http://purl.uniprot.org/bgee/ENSG00000125450 | http://purl.uniprot.org/uniprot/Q9BW27 |
+| https://idr.openmicroscopy.org/Image/1885998 | http://purl.uniprot.org/bgee/ENSG00000125450 | http://purl.uniprot.org/uniprot/Q9BW27 |
+| https://idr.openmicroscopy.org/Image/1885999 | http://purl.uniprot.org/bgee/ENSG00000125450 | http://purl.uniprot.org/uniprot/Q9BW27 |
+| https://idr.openmicroscopy.org/Image/1886000 | http://purl.uniprot.org/bgee/ENSG00000125450 | http://purl.uniprot.org/uniprot/Q9BW27 |
+| https://idr.openmicroscopy.org/Image/1886001 | http://purl.uniprot.org/bgee/ENSG00000125450 | http://purl.uniprot.org/uniprot/Q9BW27 |
+| https://idr.openmicroscopy.org/Image/1886002 | http://purl.uniprot.org/bgee/ENSG00000125450 | http://purl.uniprot.org/uniprot/Q9BW27 |
+| https://idr.openmicroscopy.org/Image/1886003 | http://purl.uniprot.org/bgee/ENSG00000125450 | http://purl.uniprot.org/uniprot/Q9BW27 |
+| https://idr.openmicroscopy.org/Image/1886004 | http://purl.uniprot.org/bgee/ENSG00000125450 | http://purl.uniprot.org/uniprot/Q9BW27 |
+| https://idr.openmicroscopy.org/Image/1886005 | http://purl.uniprot.org/bgee/ENSG00000125450 | http://purl.uniprot.org/uniprot/Q9BW27 |
+| https://idr.openmicroscopy.org/Image/1886006 | http://purl.uniprot.org/bgee/ENSG00000125450 | http://purl.uniprot.org/uniprot/Q9BW27 |
+| https://idr.openmicroscopy.org/Image/1886007 | http://purl.uniprot.org/bgee/ENSG00000125450 | http://purl.uniprot.org/uniprot/Q9BW27 |
+| https://idr.openmicroscopy.org/Image/1886008 | http://purl.uniprot.org/bgee/ENSG00000125450 | http://purl.uniprot.org/uniprot/Q9BW27 |
+| https://idr.openmicroscopy.org/Image/1886009 | http://purl.uniprot.org/bgee/ENSG00000125450 | http://purl.uniprot.org/uniprot/Q9BW27 |
+| https://idr.openmicroscopy.org/Image/1886010 | http://purl.uniprot.org/bgee/ENSG00000125450 | http://purl.uniprot.org/uniprot/Q9BW27 |
+| https://idr.openmicroscopy.org/Image/1886011 | http://purl.uniprot.org/bgee/ENSG00000125450 | http://purl.uniprot.org/uniprot/Q9BW27 |
+| https://idr.openmicroscopy.org/Image/1886012 | http://purl.uniprot.org/bgee/ENSG00000125450 | http://purl.uniprot.org/uniprot/Q9BW27 |
+| https://idr.openmicroscopy.org/Image/1886013 | http://purl.uniprot.org/bgee/ENSG00000125450 | http://purl.uniprot.org/uniprot/Q9BW27 |
+| https://idr.openmicroscopy.org/Image/1886014 | http://purl.uniprot.org/bgee/ENSG00000125450 | http://purl.uniprot.org/uniprot/Q9BW27 |
+| https://idr.openmicroscopy.org/Image/1886015 | http://purl.uniprot.org/bgee/ENSG00000125450 | http://purl.uniprot.org/uniprot/Q9BW27 |
+| https://idr.openmicroscopy.org/Image/1886016 | http://purl.uniprot.org/bgee/ENSG00000125450 | http://purl.uniprot.org/uniprot/Q9BW27 |
+| https://idr.openmicroscopy.org/Image/1886017 | http://purl.uniprot.org/bgee/ENSG00000125450 | http://purl.uniprot.org/uniprot/Q9BW27 |
+| https://idr.openmicroscopy.org/Image/1886018 | http://purl.uniprot.org/bgee/ENSG00000125450 | http://purl.uniprot.org/uniprot/Q9BW27 |
+| https://idr.openmicroscopy.org/Image/1886019 | http://purl.uniprot.org/bgee/ENSG00000125450 | http://purl.uniprot.org/uniprot/Q9BW27 |
+| https://idr.openmicroscopy.org/Image/1886020 | http://purl.uniprot.org/bgee/ENSG00000125450 | http://purl.uniprot.org/uniprot/Q9BW27 |
+| https://idr.openmicroscopy.org/Image/1886021 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886022 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886023 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886024 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886025 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886026 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886027 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886028 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886029 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886030 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886031 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886032 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886033 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886034 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886035 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886036 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886037 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886038 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886039 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886040 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886041 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886042 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886043 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886044 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886045 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886046 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886047 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886048 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886049 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886050 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1886051 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1886052 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1886053 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1886054 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1886055 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1886056 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1886057 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1886058 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1886059 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1886060 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1886061 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1886062 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1886063 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1886064 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1886065 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1886066 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1886067 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1886068 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1886069 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1886070 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1886071 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1886072 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
+| https://idr.openmicroscopy.org/Image/1886073 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886074 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886075 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886076 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886077 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886078 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886079 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886080 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886081 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886082 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886083 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886084 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886085 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886086 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886087 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886088 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886089 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886090 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886091 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886092 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886093 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886094 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886095 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886096 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886097 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886098 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886099 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886100 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886101 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886102 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886103 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886104 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886105 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886106 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886107 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886108 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886109 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886110 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886111 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886112 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886113 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886114 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886115 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886116 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886117 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886118 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886119 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886120 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886121 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886122 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886123 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886124 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886125 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886126 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886127 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886128 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886129 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886130 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886131 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886132 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886133 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886134 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886135 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886136 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886137 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886138 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886139 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+| https://idr.openmicroscopy.org/Image/1886140 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
 
+*** ttl tangling
+:PROPERTIES:
+:ID:       afe12060-acd9-49d7-8ba0-f239b9a4e6ba
+:END:
+#+begin_src ttl :eval no :tangle 002--idr-uniprot.ttl
+   <<ttl-prefixes>>
 
+  ex:002 a sh:SPARQLExecutable, sh:SPARQLSelectExecutable ;
+      rdfs:comment "Federated query connecting to Uniprot proteins via Gene Identifier key-value annotation."^^rdf:HTML ;
+      sh:prefixes _:sparql_example_prefixes ;
+      schema:keywords "key-value annotations, uniprot, federated query, proteins" ;
+      schema:target <<idr_sparql_endpoint_url>> ;
+      sh:select """
+      <<sparql.idr-to-uniprot.protein_gene>>
+      """
+#+end_src

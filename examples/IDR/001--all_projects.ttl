@@ -1,18 +1,18 @@
-@prefix dc: <http://purl.org/dc/elements/1.1/>
-@prefix dcterms: <http://purl.org/dc/terms/>
-@prefix ex: <https://sparql.uniprot.org/.well-known/sparql-examples/> .
-@prefix idr: <https://idr.openmicroscopy.org/>
-@prefix kv: <http://www.openmicroscopy.org/ns/default/>
-@prefix obda: <https://w3id.org/obda/vocabulary#>
-@prefix omecore: <https://ld.openmicroscopy.org/core/>
-@prefix omekg: <https://ld.openmicroscopy.org/omekg#>
-@prefix owl: <http://www.w3.org/2002/07/owl#>
-@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix schema: <https://schema.org/> .
-@prefix sh: <http://www.w3.org/ns/shacl#> .
-@prefix xml: <http://www.w3.org/XML/1998/namespace/>
-@prefix xsd: <http://www.w3.org/2001/XMLSchema#>
+@PREFIX dc: <http://purl.org/dc/elements/1.1/>
+@PREFIX dcterms: <http://purl.org/dc/terms/>
+@PREFIX ex: <https://sparql.uniprot.org/.well-known/sparql-examples/> .
+@PREFIX idr: <https://idr.openmicroscopy.org/>
+@PREFIX kv: <http://www.openmicroscopy.org/ns/default/>
+@PREFIX obda: <https://w3id.org/obda/vocabulary#>
+@PREFIX omecore: <https://ld.openmicroscopy.org/core/>
+@PREFIX omekg: <https://ld.openmicroscopy.org/omekg#>
+@PREFIX owl: <http://www.w3.org/2002/07/owl#>
+@PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@PREFIX schema: <https://schema.org/> .
+@PREFIX sh: <http://www.w3.org/ns/shacl#> .
+@PREFIX xml: <http://www.w3.org/XML/1998/namespace/>
+@PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
 
 ex:001 a sh:SPARQLExecutable, sh:SPARQLSelectExecutable ;
@@ -32,7 +32,9 @@ PREFIX obda: <https://w3id.org/obda/vocabulary#>
 PREFIX xml: <http://www.w3.org/XML/1998/namespace/>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX kv: <http://www.openmicroscopy.org/ns/default/>
-prefix idr: <https://idr.openmicroscopy.org/>
+PREFIX idr: <https://idr.openmicroscopy.org/>
+PREFIX up: <http://purl.uniprot.org/core/>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 
 select ?project ?name ?id where {
   ?project a omecore:Project ;
