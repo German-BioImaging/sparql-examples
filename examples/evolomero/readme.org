@@ -1,5 +1,5 @@
 #+title: Example SPARQL queries for evolomero.evolbio.mpg.de
-#+property: header-args:sparql :url https://evolomero.evolbio.mpg.de/vkg/sparql :async yes :results output table replace :cache yes :exports both :noweb yes
+#+property: header-args:sparql :url https://evolomero.evolbio.mpg.de/qlever :async yes :results output table replace :cache yes :exports both :noweb yes
 #+property: header-args:ttl :eval no :noweb yes
 #+property: header-args:bash :noweb yes :eval query
 
@@ -23,7 +23,7 @@ Here we define commonly used prefixes in =sparql= syntax to be included into
 =sparql= source code blocks by adding the line =<<idr-prefixes>>= somewhere in
 the block (probably somewhere near the top ;).
 
-#+name: idr-prefixes
+#+name: sparql-prefixes
 #+begin_src sparql :eval no
   PREFIX owl: <http://www.w3.org/2002/07/owl#>
   PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -70,7 +70,7 @@ Common prefixes in =ttl= syntax go here and can be included into =ttl= snippets 
 
 #+end_src
 
-** IDR SPARQL endpoint URL
+** SPARQL endpoint URL
 :PROPERTIES:
 :ID:       9e78c00b-3cee-4c11-a4ea-36ab08362808
 :END:
@@ -107,7 +107,7 @@ Common prefixes in =ttl= syntax go here and can be included into =ttl= snippets 
 
 #+name: 001-sparql
 #+begin_src sparql :exports both
-  <<idr-prefixes>>
+  <<sparql-prefixes>>
 
   select ?project ?name ?id where {
     ?project a omecore:Project ;
@@ -116,8 +116,67 @@ Common prefixes in =ttl= syntax go here and can be included into =ttl= snippets 
     }
 #+end_src
 
-#+RESULTS[6667685b87ba76bc9555547e2c5881a4c7393276]: 001-sparql
+#+RESULTS[96735a1ec71d54e7bf8f0bf85e816adbe2e50bb7]: 001-sparql
 | project                                      | name                 |  id |
 |----------------------------------------------+----------------------+-----|
-| https://evolomero.evolbio.mpg.de/Project/51  | Kyomen..Kaucka--2026 |  51 |
 | https://evolomero.evolbio.mpg.de/Project/102 | Escamilla2026        | 102 |
+| https://evolomero.evolbio.mpg.de/Project/51  | Kyomen..Kaucka--2026 |  51 |
+
+** Gene names and uniprot proteins
+:PROPERTIES:
+:ID:       edac2060-06c6-4937-b8fb-24b06de3716a
+:END:
+
+#+name: sparql.gene-protein
+#+begin_src sparql
+  <<sparql-prefixes>>
+
+  select * where {
+    ?img a omecore:Image;
+         omecore:hasAnnotation/omecore:mapEntry ?map .
+        ?map omecore:key ?key;
+             omecore:value ?gene .
+          filter(?key = "Gene")
+    #   {
+    #   select ?tax_val where {
+    #        ?map omecore:key ?key;
+    #        omecore:value ?tax_val .
+    #     filter(?key = "ncbitaxon")
+    #     }
+    #   }
+    # }
+    bind(iri("http://purl.uniprot.org/taxonomy/10090") as ?taxon)
+    service <https://sparql.uniprot.org/sparql>
+    {
+      select ?protein where {
+      ?protein a up:Protein;
+              up:organism <http://purl.uniprot.org/taxonomy/10090> ;
+              up:mnemonic ?mnemonic .
+      filter(concat(ucase(str(?gene)), "_MOUSE") = ?mnemonic)
+        }
+    }
+    }
+  limit 100
+#+end_src
+
+#+RESULTS[6f387101edcb396329361b183d7209f661f1860e]: sparql.gene-protein
+| img | map | key | gene | taxon | protein |
+|-----+-----+-----+------+-------+---------|
+
+#+begin_src sparql :url https://sparql.uniprot.org/sparql
+  PREFIX up: <http://purl.uniprot.org/core/>
+  select * where
+  {
+        ?protein a up:Protein;
+                up:organism <http://purl.uniprot.org/taxonomy/10090> ;
+                up:mnemonic ?mnemonic .
+        # filter(contains(lcase(?mnemonic), "dlx2"))
+      filter(concat(ucase("Dlx2"), "_MOUSE") = ?mnemonic)
+        }
+      limit 10
+#+end_src
+
+#+RESULTS[76d2418fdd81184adbb8e0e8df9f3437ac0e6fbe]:
+| protein                                | mnemonic   |
+|----------------------------------------+------------|
+| http://purl.uniprot.org/uniprot/P40764 | DLX2_MOUSE |
