@@ -1,8 +1,44 @@
 #+title: Example SPARQL queries for IDR
-#+property: header-args:sparql :url http://idr-sparql.uni-muenster.de/qlever/sparql :async yes :results output table replace :cache yes :exports both :noweb yes
+#+property: header-args:sparql :url http://idr-sparql.uni-muenster.de/qlever/sparql :async yes :results output table replace :cache yes :exports both :noweb yes :eval no-export :wrap example
 #+property: header-args:ttl :eval no :noweb yes
 #+property: header-args:bash :noweb yes :eval query
+#+bibliography: /home/grotec/data/sync/documents/reference_db/bib/jabref.bib
+#+OPTIONS: toc:t email:nil author:nil
 
+#+latex_header: \usepackage{minted}
+#+latex_header: \usepackage[style=authoryear,maxcitenames=1,url=false,eprint=false]{biblatex}
+#+latex_header: \usepackage[record=nameref]{glossaries-extra}
+#+latex_header: \setabbreviationstyle[acronym]{short-footnote}
+#+latex_header: \GlsXtrLoadResources[src={/home/grotec/texmf/tex/latex/glossary/glosabv.bib}]
+#+latex_header: \addbibresource{jabref.bib}
+
+# Authors and affiliations
+#+latex_header: \usepackage{orcidlink}
+#+latex_header: \usepackage{rorlink}
+#+latex_header: \usepackage{authblk}
+
+#+latex_header: \author[1]{Carsten Fortmann-Grote\orcidlink{0000-0002-2579-5546}}
+#+latex_header: \affil[1]{Max Planck Institute for Evolutionary Biology, Plön, Germany\rorlink{https://ror.org/0534re684}}
+#+latex_header: \usepackage{cleveref}
+#+latex_header: \usepackage[]{hyperref}
+#+latex_header: \usepackage{xcolor}
+#+latex_header: \hypersetup{
+#+latex_header:     colorlinks,
+#+latex_header:     linkcolor={red!50!black},
+#+latex_header:     citecolor={blue!50!black},
+#+latex_header:     urlcolor={blue!80!black}
+#+latex_header: }
+#+latex_header: \usepackage{hyperxmp}
+#+latex_header: \usepackage{marvosym}
+#+latex_header: \usepackage{minted}
+#+latex_header: \usepackage{parskip}
+#+latex_header: \usepackage{pgfpages}
+#+latex_header: \usepackage{tikz}
+#+latex_header: \usetikzlibrary{arrows}
+#+latex_header: \usetikzlibrary{calc}
+#+latex_header: \usetikzlibrary{positioning}
+#+latex_header: \usetikzlibrary{shapes.geometric}
+#+latex_header: \usepackage[margin=2cm]{geometry}
 * README first!
 :PROPERTIES:
 :ID:       8235c0c9-0ef5-46f3-a826-8e4b2c67a7be
@@ -107,14 +143,40 @@ Common prefixes in =ttl= syntax go here and can be included into =ttl= snippets 
 #+begin_src sparql :exports both
   <<sparql-prefixes>>
 
-  select ?project ?name ?id where {
+  select ?id ?name  where {
     ?project a omecore:Project ;
              rdfs:label ?name ;
              dc:identifier ?id .
     }
   order by ?id
+  limit 20
 #+end_src
 
+#+RESULTS[94a23f11322ceab2d725e8e35bea1c4a34803a15]: 001-sparql
+#+begin_example
+|  id | name                                             |
+|-----+--------------------------------------------------|
+|  51 | idr0021-lawo-pericentriolarmaterial/experimentA  |
+|  52 | idr0023-szymborska-nuclearpore/experimentA       |
+| 101 | idr0018-neff-histopathology/experimentA          |
+| 151 | idr0027-dickerson-chromatin/experimentA          |
+| 201 | idr0032-yang-meristem/experimentA                |
+| 301 | idr0026-weigelin-immunotherapy/experimentA       |
+| 351 | idr0038-held-kidneylightsheet/experimentA        |
+| 352 | idr0038-held-kidneylightsheet/experimentB        |
+| 353 | idr0038-held-kidneylightsheet/experimentC        |
+| 354 | idr0038-held-kidneylightsheet                    |
+| 401 | idr0040-aymoz-singlecell/experimentA             |
+| 402 | idr0042-nirschl-wsideeplearning/experimentA      |
+| 404 | idr0041-cai-mitoticatlas/experimentA             |
+| 405 | idr0045-reichmann-zygotespindle/experimentA      |
+| 501 | idr0043-uhlen-humanproteinatlas/experimentA      |
+| 502 | idr0044-mcdole-tardislightsheet/experimentA      |
+| 503 | idr0047-neuert-yeastmrna/experimentA             |
+| 504 | idr0053-faas-virtualnanoscopy/experimentA        |
+| 505 | idr0050-springer-cytoskeletalsystems/experimentA |
+| 552 | idr0051-fulton-tailbudlightsheet/experimentA     |
+#+end_example
 
 ** More project properties
 :PROPERTIES:
@@ -128,7 +190,8 @@ Common prefixes in =ttl= syntax go here and can be included into =ttl= snippets 
     }
 #+end_src
 
-#+RESULTS[e6dbdfb098bc38c764698da601fb14b423eb007b]:
+#+RESULTS[136b551335c8006794a36bf9ac1cb07cfcb4c2a2]:
+#+begin_example
 | project_property                                      |
 |-------------------------------------------------------|
 | http://purl.org/dc/elements/1.1/identifier            |
@@ -139,6 +202,7 @@ Common prefixes in =ttl= syntax go here and can be included into =ttl= snippets 
 | https://ld.openmicroscopy.org/core/experimenter_group |
 | https://ld.openmicroscopy.org/core/experimenter       |
 | https://ld.openmicroscopy.org/core/hasAnnotation      |
+#+end_example
 
 ** Unique annotation keys 
 :PROPERTIES:
@@ -146,10 +210,6 @@ Common prefixes in =ttl= syntax go here and can be included into =ttl= snippets 
 :END:
 
 
-*** SPARQL query
-:PROPERTIES:
-:ID:       7b33c079-ec1b-4a81-95d3-86c83b2580d8
-:END:
 #+name: sparql.idr.image.number_of_keys
 #+begin_src sparql
   <<sparql-prefixes>>
@@ -160,14 +220,15 @@ Common prefixes in =ttl= syntax go here and can be included into =ttl= snippets 
     }
 #+end_src
 
-#+RESULTS[694bc3193a70080c55f6b69834a58764a231eaf2]: sparql.idr.image.keys
+#+RESULTS[1e27da5263ced86e2abf7f79b488378b1130c509]: sparql.idr.image.number_of_keys
+#+begin_example
 | nkey |
 |------|
 |  549 |
+#+end_example
 
 
-
-*** ttl wrapper
+*** ttl wrapper                                                      :noexport:
 :PROPERTIES:
 :ID:       e0b87ffd-c50d-4c2a-a583-ea30ed4e2387
 :END:
@@ -185,585 +246,55 @@ Common prefixes in =ttl= syntax go here and can be included into =ttl= snippets 
 #+end_src
 
 
-* Unique annotation keys and usage frequency
+** Unique annotation keys and usage frequency
 :PROPERTIES:
 :ID:       3ac9ffd4-1a54-443f-b1f9-4952a58d0779
 :END:
 
 
-*** SPARQL query
-:PROPERTIES:
-:ID:       7b33c079-ec1b-4a81-95d3-86c83b2580d8
-:END:
 #+name: sparql.idr.image.key_usage
 #+begin_src sparql
-  <<sparql-prefixes>>
-SELECT ?key (COUNT(?value) AS ?n_usage)
-WHERE {
-  ?img a omecore:Image;
-       omecore:hasAnnotation/omecore:mapEntry [
-           omecore:key ?key;
-           omecore:value ?value
-       ] .
-}
-GROUP BY ?key
-ORDER BY DESC(?n_usage)
+    <<sparql-prefixes>>
+  SELECT ?key (COUNT(?value) AS ?n_usage)
+  WHERE {
+    ?img a omecore:Image;
+         omecore:hasAnnotation/omecore:mapEntry [
+             omecore:key ?key;
+             omecore:value ?value
+         ] .
+  }
+  GROUP BY ?key
+  ORDER BY DESC(?n_usage)
+  LIMIT 20
 #+end_src
 
-#+RESULTS[9892787a21a9de06379013626431f7cd8e1a98aa]: sparql.idr.image.key_usage
-| key                                                          |  n_usage |
-|--------------------------------------------------------------+----------|
-| Organism                                                     | 14187208 |
-| Gene Identifier URL                                          | 13179301 |
-| Gene Symbol                                                  | 10743692 |
-| Gene Identifier                                              | 10743692 |
-| Cell Line                                                    |  7577518 |
-| Organism Part                                                |  6475946 |
-| Organism Part Identifier                                     |  6452324 |
-| Pathology Identifier                                         |  6407573 |
-| Pathology                                                    |  6407573 |
-| Sex                                                          |  6171454 |
-| Age                                                          |  6147978 |
-| Antibody Identifier                                          |  5947474 |
-| Antibody Identifier URL                                      |  5946893 |
-| Dilution Factor                                              |  5941710 |
-| Individual                                                   |  5935036 |
-| Human Protein Atlas version                                  |  5931242 |
-| Retrieval Method                                             |  5931242 |
-| Ensembl version                                              |  5931242 |
-| Channels                                                     |  4171941 |
-| Compound Name                                                |  3619585 |
-| Compound Name URL                                            |  2980250 |
-| siRNA Pool Identifier                                        |  2335422 |
-| RefSeq GI Number                                             |  2178976 |
-| RefSeq Accession                                             |  2092322 |
-| siRNA Identifier                                             |  2021726 |
-| Reagent Identifier                                           |  1893648 |
-| Library                                                      |  1834560 |
-| SMILES                                                       |  1351295 |
-| PubChem CID                                                  |  1350877 |
-| InChIKey                                                     |  1316368 |
-| Sense Sequence                                               |  1297398 |
-| Antisense Sequence                                           |  1267064 |
-| Compound SMILES                                              |  1012988 |
-| Quality Control                                              |   973090 |
-| Compound Concentration (microMolar)                          |   960077 |
-| Control Type                                                 |   935803 |
-| Dose                                                         |   888797 |
-| Compound Broad Identifier URL                                |   830202 |
-| Compound Broad Identifier Short                              |   830202 |
-| Compound Broad Identifier                                    |   830202 |
-| Compound Source                                              |   830088 |
-| Compound Group                                               |   772578 |
-| Cell Line with Markers                                       |   739991 |
-| Analysis Gene Annotation Build                               |   735505 |
-| Reagent Design Gene Annotation Build                         |   727212 |
-| Phenotype                                                    |   684762 |
-| Compound Set                                                 |   661655 |
-| Phenotype Term Accession URL                                 |   618257 |
-| Phenotype Term Accession                                     |   618156 |
-| Phenotype Term Name                                          |   618064 |
-| Transcript Identifier                                        |   582759 |
-| Compound MoA                                                 |   566875 |
-| Has Phenotype                                                |   565576 |
-| Concentration (microMolar)                                   |   540689 |
-| PubChem InChIKey                                             |   527862 |
-| Cell Type                                                    |   527347 |
-| Gene Annotation Comments                                     |   519236 |
-| Cell Line Comment                                            |   473242 |
-| Phenotype Annotation Level                                   |   439363 |
-| Control Comments                                             |   417577 |
-| Strain                                                       |   385889 |
-| ChEMBL Identifier URL                                        |   361514 |
-| Vendor Catalog Identifier                                    |   339606 |
-| Compound Identifier                                          |   327728 |
-| Compound PubChem CID                                         |   327728 |
-| Compound ChEMBL ID                                           |   326612 |
-| Unichem URL                                                  |   326134 |
-| Compound General Target Class                                |   298401 |
-| Compound General activity                                    |   298401 |
-| Compound DrugBank Identifier                                 |   297972 |
-| Compound Target Entrez IDs                                   |   282348 |
-| ORF Identifier                                               |   282320 |
-| Original Gene Target                                         |   277116 |
-| siRNA Sequences                                              |   273720 |
-| ORF Comments                                                 |   271216 |
-| Comments                                                     |   268627 |
-| Patient ID                                                   |   259200 |
-| Culture                                                      |   259200 |
-| Viability_norm                                               |   258192 |
-| Viability                                                    |   254148 |
-| Subcellular Localization Based On Secondary Screening        |   236224 |
-| ORF Identifier URL                                           |   236224 |
-| Scored As Nuclear Foci At Initial Stage                      |   236224 |
-| hORFeome V5.1 Clone Description                              |   234184 |
-| Number of cells                                              |   229284 |
-| Gene Annotation Build                                        |   221006 |
-| Class                                                        |   214975 |
-| Treatment time (h)                                           |   207999 |
-| Manuscript Number                                            |   207999 |
-| Experimental Batch                                           |   207999 |
-| IUPAC                                                        |   207927 |
-| Genotype                                                     |   199171 |
-| Mitocheck siRNA Identifier                                   |   191183 |
-| Successful Transfer                                          |   190464 |
-| Treatment Type                                               |   190464 |
-| Batch Number                                                 |   190464 |
-| HGNC Gene Symbol                                             |   163395 |
-| PubChem URL                                                  |   161319 |
-| Processed Image Channel                                      |   151189 |
-| Compound Selectivity Updated                                 |   147456 |
-| Compound Treatment                                           |   147456 |
-| Mutation Detailed                                            |   147456 |
-| siRNA Sequence 2                                             |   145490 |
-| siRNA Sequence 1                                             |   145490 |
-| siRNA Sequence 3                                             |   145490 |
-| siRNA Sequence 4                                             |   145490 |
-| Cycle Number                                                 |   144818 |
-| Tile Position                                                |   144818 |
-| Stimulation                                                  |   144818 |
-| Percentage Inhibition (DPC)                                  |   143736 |
-| siRNA Library Name                                           |   133252 |
-| Protein                                                      |   132234 |
-| Addgene ID                                                   |   131476 |
-| Protein Name                                                 |   131476 |
-| Subcellular Localization                                     |   131476 |
-| RefSeq Locus                                                 |   131452 |
-| Hit Compound (over 75% activity)                             |   128040 |
-| Protein Sequence (aa)                                        |   127971 |
-| Protein URL                                                  |   125033 |
-| UniProt ID                                                   |   125033 |
-| Compound Class                                               |   122880 |
-| Compound Description                                         |   122784 |
-| IUPAC Name                                                   |   122419 |
-| BRD (short)                                                  |   119304 |
-| BRD                                                          |   119304 |
-| Purity (%)                                                   |   118872 |
-| Compound Action                                              |   117984 |
-| Broad Identifier                                             |   112809 |
-| Replicate Group                                              |   110252 |
-| Compound Secondary Name                                      |   102048 |
-| Compound Selectivity                                         |   101856 |
-| Environmental Stress                                         |    97920 |
-| Cells - Number of Objects                                    |    88128 |
-| Channels Comment                                             |    82873 |
-| Quality Control Comments                                     |    80933 |
-| Identifier                                                   |    72360 |
-| Score                                                        |    69919 |
-| Characteristics Comments                                     |    68992 |
-| Proprietary Compound                                         |    66642 |
-| Cell ID                                                      |    60480 |
-| Gene Symbol Synonyms                                         |    57522 |
-| Control Type Comments                                        |    55620 |
-| Number of Cells (DPC)                                        |    55608 |
-| CAS                                                          |    48303 |
-| Allele                                                       |    45925 |
-| RNAi Primer 1                                                |    44934 |
-| RNAi Primer 2                                                |    44934 |
-| Reagent Annotation Comments                                  |    44934 |
-| CAN Repeats                                                  |    44538 |
-| Off Target Effects                                           |    44538 |
-| siRNA Identifier URL                                         |    43766 |
-| Original RefSeq Target                                       |    42246 |
-| Original GeneID Target                                       |    42246 |
-| Original LocusLink Target                                    |    42114 |
-| Gene Model Status                                            |    42069 |
-| Gene In Secondary Screen                                     |    40602 |
-| RefSeq Hits                                                  |    39588 |
-| Image Comment                                                |    39314 |
-| shRNA                                                        |    36960 |
-| Compound Enzyme                                              |    36000 |
-| Overall Strong Inhibitor Gene Hit                            |    35893 |
-| Operetta Measurement                                         |    35883 |
-| Cell Line URL                                                |    35883 |
-| Operetta Plate Name                                          |    35883 |
-| Plate Issues                                                 |    35772 |
-| Gene Allele Name                                             |    35100 |
-| Median Replicate Correlation                                 |    35100 |
-| ORF Sequence                                                 |    34992 |
-| ChEMBL Identifier                                            |    34902 |
-| Donor Identifier                                             |    34674 |
-| Prestwick Chemical Library ID                                |    34482 |
-| Target Transcript                                            |    32724 |
-| Comment                                                      |    30311 |
-| Progenitor Cell Type                                         |    30213 |
-| BioSamples Identifier URL                                    |    30024 |
-| Disease State                                                |    30024 |
-| Results Measurements                                         |    30024 |
-| BioSamples Identifier                                        |    30024 |
-| Gene In Validation Screen                                    |    29333 |
-| RefSeq Accession URL                                         |    29280 |
-| Results Summary                                              |    29214 |
-| Media                                                        |    27656 |
-| Cell Line Morphotype                                         |    25872 |
-| Cell Type\Genetic Subtype (Neve et al., Cancer Cell 2006)    |    25872 |
-| Antibody                                                     |    23937 |
-| Potential Mitotic Hit At Gene Level                          |    23933 |
-| Diagnosis                                                    |    23712 |
-| Gene Name                                                    |    23402 |
-| In Annotated Set                                             |    23364 |
-| Phenoptye Annotation Level                                   |    20010 |
-| MMS treatment                                                |    18016 |
-| Well Coating                                                 |    17944 |
-| Protocol                                                     |    17582 |
-| Parasite Line                                                |    17408 |
-| Batch                                                        |    17377 |
-| Score - Nuclear fascin                                       |    17260 |
-| Gene Hit for YAP Localization Inconsistent With Cell Shape   |    17040 |
-| Product Use Annotation                                       |    16956 |
-| Score - Nuclear F-actin                                      |    16810 |
-| Publication Screen Name                                      |    15855 |
-| Cell Line Designation                                        |    15855 |
-| Motor Neuron DIV                                             |    15855 |
-| Donor Sex                                                    |    15855 |
-| Donor Age                                                    |    15855 |
-| Treatment Description                                        |    15855 |
-| Proprietary Compound Concentration (microMolar)              |    15102 |
-| Image File Type                                              |    14289 |
-| Position                                                     |    14040 |
-| Nuclear fascin                                               |    13860 |
-| Nuclear F-actin                                              |    13860 |
-| Plate Replicate                                              |    13824 |
-| Validated Mitotic Hit At Gene Level                          |    13570 |
-| Gene Description                                             |    13323 |
-| Replicate                                                    |    13208 |
-| MeSH Annotation                                              |    12420 |
-| Plate Subset                                                 |    12288 |
-| siRNA Annotation Comments                                    |    12060 |
-| Time                                                         |    11088 |
-| Overall Hit Gene Consensus                                   |     9579 |
-| Material Type                                                |     9546 |
-| HU Treatment                                                 |     9016 |
-| MMS Treatment                                                |     9016 |
-| Morphological Cluster ID                                     |     8208 |
-| DMSO solvent                                                 |     8096 |
-| Mutation                                                     |     8029 |
-| Treatment                                                    |     7973 |
-| GO Annotation                                                |     7884 |
-| Donor Age At Disease Onset                                   |     7737 |
-| siRNA Catalog Number                                         |     7608 |
-| Entrez Annotation                                            |     7164 |
-| Acquisition Time                                             |     6818 |
-| Acquisition Date                                             |     6818 |
-| Sample ID                                                    |     6810 |
-| GBIF Taxonomy                                                |     6579 |
-| Basis of Record                                              |     6579 |
-| Alternative Organism Name                                    |     6579 |
-| Voucher Specimen                                             |     6579 |
-| Specimen Description                                         |     6559 |
-| Ethnicity                                                    |     6547 |
-| Treatment Time                                               |     6491 |
-| Treatment Description Comments                               |     6063 |
-| Microscope Magnification                                     |     5977 |
-| Developmental Stage                                          |     5873 |
-| Comment Cell Line                                            |     5845 |
-| RNA Labelling                                                |     5684 |
-| Image File Comments                                          |     5457 |
-| Open Tree Taxonomy                                           |     5452 |
-| Assay Name                                                   |     5223 |
-| Protocol REF                                                 |     5203 |
-| Source Name                                                  |     5164 |
-| Scored Subcellular Localization By Secondary Screening       |     5128 |
-| Expression Pattern Description                               |     5057 |
-| Mouse ID                                                     |     5056 |
-| Visualisation Method                                         |     4984 |
-| Regulatory Hub                                               |     4974 |
-| Nearest Human Homologue                                      |     4968 |
-| Gene Annotation                                              |     4960 |
-| Pharmacological Treatment                                    |     4816 |
-| Stretch Duration                                             |     4816 |
-| Number of Spots                                              |     4753 |
-| Characteristics [Sex]                                        |     4753 |
-| Intensity of Spots                                           |     4423 |
-| Concentration                                                |     4216 |
-| In Validation Screen                                         |     4044 |
-| Author Hit                                                   |     3715 |
-| GO Biological Process                                        |     3695 |
-| GO Cellular Component                                        |     3695 |
-| GO Molecular Function                                        |     3695 |
-| GO Term                                                      |     3695 |
-| Patient Identifier                                           |     3600 |
-| Cell Cycle Stage                                             |     3489 |
-| Changed in allR                                              |     3393 |
-| Growth Media                                                 |     3221 |
-| Mechanism of Action (MoA)                                    |     3168 |
-| Cell Cycle Phase                                             |     3033 |
-| Tissue Type 1                                                |     3026 |
-| Tissue Type 2                                                |     3026 |
-| In Annotated and Active Set                                  |     2880 |
-| Target Gene Construct                                        |     2791 |
-| Target Gene GenBank Identifier                               |     2791 |
-| Target Operator                                              |     2791 |
-| TF Gene GenBank Identifier                                   |     2761 |
-| TF Gene Construct                                            |     2761 |
-| TF Operator                                                  |     2761 |
-| ch-TOG Multipolar Spindle Phenotype Hit                      |     2760 |
-| Temperature Sensitive Allele                                 |     2638 |
-| Compound MOA (from Ljosa et al, 2013)                        |     2528 |
-| Intron-targeting sgRNA                                       |     2390 |
-| Sister Chromatid Labelling                                   |     2380 |
-| Ethnic or Racial Group                                       |     2363 |
-| Clinical History                                             |     2299 |
-| Probe                                                        |     2279 |
-| Antibody Comment                                             |     1989 |
-| Experimental Condition                                       |     1981 |
-| Organ                                                        |     1965 |
-| Antibody Target 2                                            |     1962 |
-| Antibody Target 1                                            |     1962 |
-| Image Description                                            |     1960 |
-| Genome Editing                                               |     1916 |
-| Cluster                                                      |     1886 |
-| Preculture                                                   |     1784 |
-| Steps                                                        |     1784 |
-| Flow Control                                                 |     1784 |
-| Longitude                                                    |     1766 |
-| Geodetic Datum                                               |     1766 |
-| Latitude                                                     |     1766 |
-| Restrictive Temperature                                      |     1748 |
-| Assay Description                                            |     1670 |
-| Phenotype 1                                                  |     1650 |
-| Marker                                                       |     1608 |
-| Compound Comments                                            |     1580 |
-| In Final Gene Hit List                                       |     1570 |
-| ChemBank Annotation                                          |     1368 |
-| Label                                                        |     1344 |
-| Condition                                                    |     1255 |
-| Compound Comment                                             |     1200 |
-| siRNA Hit                                                    |     1158 |
-| Protocol 2                                                   |     1042 |
-| Disease Subtype                                              |     1034 |
-| Protocol 1                                                   |     1027 |
-| Observation                                                  |      963 |
-| Targeted Protein                                             |      938 |
-| Targeted Protein URL                                         |      938 |
-| Human Ortholog URL                                           |      899 |
-| Human Ortholog Gene Symbol                                   |      899 |
-| Human Ortholog                                               |      899 |
-| Series Location                                              |      874 |
-| Cell Origin                                                  |      874 |
-| Experiment Date                                              |      874 |
-| siRNA Dose                                                   |      864 |
-| EFO term                                                     |      840 |
-| Phenotype 2                                                  |      795 |
-| Mating Type                                                  |      780 |
-| Phenotype 30 Term Name                                       |      721 |
-| Original Image                                               |      670 |
-| Coordinate Precision                                         |      639 |
-| Elevation                                                    |      597 |
-| Antibody Concentration                                       |      576 |
-| Validated localizations                                      |      576 |
-| Refseq Transcript Exon(s) Targeted by siRNA                  |      576 |
-| Volume of Antibody                                           |      576 |
-| Core ID                                                      |      548 |
-| Cell Mask Comments                                           |      548 |
-| Image Number                                                 |      548 |
-| Metabric ID                                                  |      548 |
-| Age at Diagnosis                                             |      532 |
-| Tag Peptide Sequence                                         |      504 |
-| Degradation Tag                                              |      504 |
-| RNA FISH Probe 1                                             |      493 |
-| Genomic Locations Probe 3                                    |      493 |
-| Genomic Locations Probe 2                                    |      493 |
-| Genomic Locations Probe 1                                    |      493 |
-| Genomic Locations Probe 4                                    |      493 |
-| RNA FISH Probe 4                                             |      493 |
-| Cell Population                                              |      493 |
-| RNA FISH Probe                                               |      493 |
-| RNA FISH Probe 3                                             |      493 |
-| RNA FISH Probe 2                                             |      493 |
-| Cells in Image                                               |      493 |
-| Expt Date                                                    |      493 |
-| Ecotype                                                      |      463 |
-| ID                                                           |      462 |
-| Cell Type Comments                                           |      462 |
-| cBioPortal URL                                               |      460 |
-| Glycosyltransferase Family                                   |      458 |
-| In Situ Section                                              |      458 |
-| Forward Primer Sequence (5' - 3')                            |      458 |
-| Expression Pattern                                           |      458 |
-| Experimental Condition [Target Gene]                         |      458 |
-| Reverse Primer Sequence (5' - 3')                            |      458 |
-| Import Cargo Type                                            |      456 |
-| #NLSs                                                        |      456 |
-| Genetic Background                                           |      435 |
-| Compound Information                                         |      429 |
-| Compound Identifier (CAS Number)                             |      429 |
-| Compound Identifier (CAS Number) URL                         |      429 |
-| Experimental Conclusion                                      |      423 |
-| Cell Labels                                                  |      420 |
-| Genetic Perturbation                                         |      420 |
-| Experimental Replicate Date                                  |      420 |
-| Imaging Type                                                 |      419 |
-| Antibody Target                                              |      414 |
-| Fluorescent Labels                                           |      412 |
-| Fluorescent Label Reference DOIs                             |      412 |
-| PDX Metastatic Efficiency                                    |      408 |
-| Concentration (nanoMolar)                                    |      384 |
-| Development stage                                            |      373 |
-| Publication Figure                                           |      366 |
-| Smoking Status                                               |      336 |
-| Phenotype Outcome                                            |      336 |
-| CIS - Tumors                                                 |      336 |
-| Tissue Source                                                |      336 |
-| CIS - Area                                                   |      336 |
-| CIS - Lymphocytes                                            |      336 |
-| CIS - Stromals                                               |      336 |
-| Previous Lung Cancer                                         |      336 |
-| CIS - Other Cells                                            |      336 |
-| Processed image 2                                            |      335 |
-| Processed image 1                                            |      335 |
-| Pack Years                                                   |      312 |
-| Genetic Cross                                                |      304 |
-| Reporter                                                     |      300 |
-| METABRIC ID                                                  |      295 |
-| Stroma - Other Cells                                         |      291 |
-| Stroma - Lymphocytes                                         |      291 |
-| Stroma - Stromals                                            |      291 |
-| Stroma - Tumors                                              |      291 |
-| Stroma - Area                                                |      291 |
-| Growth Condition                                             |      233 |
-| Cell Identifier                                              |      229 |
-| Genomic Separation Of Operators                              |      229 |
-| Sampling Timepoint                                           |      227 |
-| Field                                                        |      227 |
-| Raw Data Capture                                             |      227 |
-| Treatment Timepoint                                          |      227 |
-| Clinical Information                                         |      227 |
-| Analysis Output                                              |      208 |
-| Probe Design                                                 |      208 |
-| Image File Comment                                           |      202 |
-| Age at Dx                                                    |      199 |
-| Patient Number                                               |      199 |
-| Core Number                                                  |      199 |
-| OS*                                                          |      199 |
-| RFS                                                          |      199 |
-| RFS*                                                         |      199 |
-| OS                                                           |      199 |
-| Intervention                                                 |      199 |
-| Sx Grade                                                     |      194 |
-| Medical Condition                                            |      193 |
-| IHC Staining                                                 |      193 |
-| Genetic Background Identifier                                |      192 |
-| T Stage                                                      |      190 |
-| Sx Tumor Size (cm)                                           |      190 |
-| LN                                                           |      190 |
-| InChI                                                        |      176 |
-| Tissue                                                       |      176 |
-| Based Treatment                                              |      176 |
-| Technical Replicate                                          |      176 |
-| Organism Part Comment                                        |      167 |
-| ChEMBL                                                       |      160 |
-| Selectivity                                                  |      156 |
-| Gene Expression CIS Region                                   |      153 |
-| Experimental Description                                     |      149 |
-| Time Point                                                   |      146 |
-| Image Quality Control                                        |      146 |
-| Assay Quality Control                                        |      146 |
-| BRCA Status                                                  |      126 |
-| Embryo Collection                                            |      126 |
-| Processed Data File                                          |      121 |
-| Imaging Comment                                              |      117 |
-| Image File Comments]                                         |      116 |
-| Number colonies on plate                                     |      115 |
-| CI Identifier                                                |      115 |
-| Demyelinated Corpus Callosum                                 |      110 |
-| Image File Type Comments                                     |      110 |
-| Methylation                                                  |      108 |
-| Organism Part Comments                                       |      103 |
-| Sample Description                                           |       96 |
-| Image Dimensions                                             |       96 |
-| Whole Genome Sequencing                                      |       93 |
-| Construct/Marker                                             |       80 |
-| Nanotomy URL                                                 |       74 |
-| Clearing                                                     |       74 |
-| Description                                                  |       74 |
-| Image File Type Comment                                      |       70 |
-| Embryo/Fetus ID                                              |       67 |
-| ChEBI                                                        |       64 |
-| BioSample URL                                                |       64 |
-| BioSample ID                                                 |       64 |
-| nPOD ID                                                      |       64 |
-| Phenotype 15 Term Accession                                  |       60 |
-| Entrez Gene Identifier                                       |       56 |
-| Gene Expression Stromal Region                               |       54 |
-| Imaging timepoint [h]                                        |       52 |
-| Image Acquisition and Feature Extraction Protocol            |       51 |
-| Growth Protocol                                              |       51 |
-| Selectivity Synonym                                          |       44 |
-| Source Image                                                 |       40 |
-| Phenotype 19 Term Name                                       |       40 |
-| Developmental Stage Description                              |       34 |
-| Treatment Protocol                                           |       33 |
-| Image Channels Comments                                      |       31 |
-| Density                                                      |       24 |
-| Cell Number                                                  |       24 |
-| Cell Sheet Radius                                            |       24 |
-| Protocol 3                                                   |       22 |
-| Experiment Comment                                           |       22 |
-| Genotype Comments                                            |       22 |
-| Segmented Image                                              |       20 |
-| Primary Antibody Dilution                                    |       20 |
-| Phenotype 3                                                  |       20 |
-| Secondary Antibody                                           |       20 |
-| Secondary Antibody Dilution                                  |       20 |
-| Secondary Antibody Identifier                                |       20 |
-| Segmentation Method                                          |       20 |
-| Segmented Channel                                            |       20 |
-| Embryo Orientation                                           |       20 |
-| Hybridization Probe                                          |       20 |
-| Genetic Cross Comments                                       |       20 |
-| Gene Expression Pattern                                      |       20 |
-| Genetic Modification                                         |       19 |
-| Experimental Results                                         |       19 |
-| 2 Deoxyglucose Treatment                                     |       18 |
-| Cholesterol Treatment                                        |       18 |
-| ROI Indexing Comment                                         |       18 |
-| Organism Part 2                                              |       18 |
-| Organism Part 1                                              |       18 |
-| ROI Z Size                                                   |       18 |
-| ROI Z Coordinate                                             |       18 |
-| ROI Y Size                                                   |       18 |
-| ROI Y Coordinate                                             |       18 |
-| ROI X Size                                                   |       18 |
-| ROI X Coordinate                                             |       18 |
-| Image Description Comment                                    |       17 |
-| Corresponding TEM ROIs                                       |       17 |
-| Secondary Name                                               |       16 |
-| Jax Mouse Line Comment                                       |       15 |
-| Strain Comment                                               |       15 |
-| Genotype Comment                                             |       15 |
-| Phenotype Description                                        |       14 |
-| ROI Original Dataset                                         |       12 |
-| Probe 1                                                      |       10 |
-| Wavelength                                                   |        7 |
-| Control Type Comment                                         |        6 |
-| Views Imaged for Multiview Reconstruction                    |        5 |
-| Labelled Cellular Structure                                  |        5 |
-| Voxel Dimensions                                             |        5 |
-| Primary Antibody 1                                           |        5 |
-| Transgenic Line                                              |        5 |
-| Primary Antibody 1 Dilution                                  |        5 |
-| Secondary Antibody 2 Dilution                                |        5 |
-| Primary Antibody 2                                           |        5 |
-| Primary Antibody 2 Dilution                                  |        5 |
-| Secondary Antibody 2                                         |        5 |
-| Secondary Antibody 1 Dilution                                |        5 |
-| Secondary Antibody 1                                         |        5 |
-| Time Interval                                                |        5 |
-| Glomeruli - number of false positives                        |        3 |
-| ROI Dimensions Comment                                       |        3 |
-| Glomeruli - number identified by machine learning            |        3 |
-| Glomeruli - number of false negatives estimated by sterology |        3 |
-| Image Note                                                   |        3 |
-| Reporter Comment                                             |        2 |
-| Infectious Agent                                             |        2 |
-| Mouse Age                                                    |        2 |
-| Analysis Note                                                |        2 |
-| Phenotype 20 Term Accession                                  |        1 |
-| Probe 2                                                      |        1 |
-| Intravenous Injection                                        |        1 |
+#+RESULTS[d17e42af230b1b4878753f49f2fc216a7272f803]: sparql.idr.image.key_usage
+#+begin_example
+| key                         |  n_usage |
+|-----------------------------+----------|
+| Organism                    | 14187208 |
+| Gene Identifier URL         | 13179301 |
+| Gene Symbol                 | 10743692 |
+| Gene Identifier             | 10743692 |
+| Cell Line                   |  7577518 |
+| Organism Part               |  6475946 |
+| Organism Part Identifier    |  6452324 |
+| Pathology Identifier        |  6407573 |
+| Pathology                   |  6407573 |
+| Sex                         |  6171454 |
+| Age                         |  6147978 |
+| Antibody Identifier         |  5947474 |
+| Antibody Identifier URL     |  5946893 |
+| Dilution Factor             |  5941710 |
+| Individual                  |  5935036 |
+| Human Protein Atlas version |  5931242 |
+| Retrieval Method            |  5931242 |
+| Ensembl version             |  5931242 |
+| Channels                    |  4171941 |
+| Compound Name               |  3619585 |
+#+end_example
 
-*** ttl wrapper
+*** ttl wrapper                                                      :noexport:
 :PROPERTIES:
 :ID:       e0b87ffd-c50d-4c2a-a583-ea30ed4e2387
 :END:
@@ -786,11 +317,6 @@ ORDER BY DESC(?n_usage)
 :END:
 List all keys used to annotate a given IDR image.
 
-
-*** SPARQL query
-:PROPERTIES:
-:ID:       9e35e6db-7ccf-424b-98f5-dfad747f08cc
-:END:
 #+name: sparql.idr.select_image.keys
 #+begin_src sparql
   <<sparql-prefixes>>
@@ -801,7 +327,8 @@ List all keys used to annotate a given IDR image.
     }
 #+end_src
 
-#+RESULTS[8ae1594c99207013bf06c6caf387afcd6adc6f0d]: sparql.idr.select_image.keys
+#+RESULTS[e7da7e98ad81be3585aa5e5b9750f0ce204145e7]: sparql.idr.select_image.keys
+#+begin_example
 | key                                                   |
 |-------------------------------------------------------|
 | Cell Line                                             |
@@ -816,6 +343,7 @@ List all keys used to annotate a given IDR image.
 | Organism                                              |
 | Scored As Nuclear Foci At Initial Stage               |
 | Subcellular Localization Based On Secondary Screening |
+#+end_example
 
 
 *** ttl wrapper                                                    :noexport:
@@ -844,141 +372,51 @@ List all keys used to annotate a given IDR image.
 :END:
 Which genes are referenced in the IDR?
 
-
-
-*** SPARQL query
-:PROPERTIES:
-:ID:       d914e4f9-988e-4729-8650-b83e812fd1dd
-:END:
 #+name: sparql.idr.image.gene_symbols
 #+begin_src sparql
   <<sparql-prefixes>>
 
-  select distinct ?prj ?img ?gene_identifier where {
+  select distinct ?gene_identifier where {
     ?img a omecore:Image ;
          omecore:hasAnnotation/omecore:mapEntry [omecore:key ?key; omecore:value ?gene_identifier] ;
-         ^dcterms:hasPart/^dcterms:hasPart ?prj .
-    values ?key {"Gene Identifier URL"}
-    filter(strstarts(?gene_identifier, "http://arabidopsis.org"))
+    values ?key {"Gene Symbol"}
   }
-  limit 100
+  limit 20
 #+end_src
 
-#+RESULTS[a21f62cc3edb338ff349f066591e7b8fb0b5ba31]: sparql.idr.image.gene_symbols
-| prj                                        | img                                          | gene_identifier                                                      |
-|--------------------------------------------+----------------------------------------------+----------------------------------------------------------------------|
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125701 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G02720 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125703 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G02720 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125705 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G02720 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125707 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G02720 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125709 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G02730 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125711 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G02730 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125713 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G02730 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125715 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G02730 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125717 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G03520 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125719 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G03520 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125721 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G03520 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125723 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G03520 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125725 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G05170 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125726 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G05170 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125727 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G05170 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125728 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G05570 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125730 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G05570 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125732 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G05570 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125734 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G05570 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125736 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G06780 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125737 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G06780 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125738 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G06780 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125739 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G06780 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125740 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G08280 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125742 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G08280 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125744 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G08280 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125746 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G08280 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125748 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G08660 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125750 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G08660 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125752 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G08660 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125754 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G08660 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125756 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G11730 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125758 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G11730 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125760 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G11730 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125762 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G11730 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125764 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G13250 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125766 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G13250 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125768 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G13250 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125770 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G13250 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125772 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G14070 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125773 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G14070 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125774 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G14070 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125775 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G14070 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125776 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G14590 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125778 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G14590 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125780 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G14590 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125782 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G14590 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125784 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G18580 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125786 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G18580 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125788 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G18580 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125790 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G18580 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125792 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G18690 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125793 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G18690 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125794 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G18690 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125795 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G18690 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125796 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G19360 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125798 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G19360 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125800 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G19360 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125802 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G19360 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125804 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G20575 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125806 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G20575 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125808 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G20575 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125810 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G20575 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125812 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G21480 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125814 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G21480 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125816 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G21480 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125818 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G21480 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125820 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G24070 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125822 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G24070 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125824 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G24070 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125826 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G24070 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125828 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G24170 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125830 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G24170 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125832 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G24170 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125834 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G24170 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125836 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G27440 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125838 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G27440 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125840 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G27440 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125842 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G27440 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125844 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G27600 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125846 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G27600 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125848 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G27600 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125850 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G27600 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125852 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G32930 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125854 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G32930 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125856 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G32930 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125858 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G32930 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125860 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G33250 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125862 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G33250 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125864 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G33250 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125866 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G33250 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125868 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G53290 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125870 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G53290 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125872 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G53290 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125874 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G70090 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125876 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G70090 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125878 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G70090 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125880 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G70090 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125882 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G70630 |
-| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125884 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G70630 |
+#+RESULTS[03641f8257ba827a45be1c0c4e02455af5942ea2]: sparql.idr.image.gene_symbols
+#+begin_example
+| gene_identifier |
+|-----------------|
+|                 |
+| 128up           |
+| 14-3-3epsilon   |
+| 14-3-3zeta      |
+| 140up           |
+| 15E2_HUMAN      |
+| 18w             |
+| 26-29-p         |
+| 2mit            |
+| 312             |
+| 4EHP            |
+| 5-HT1A          |
+| 5-HT1B          |
+| 5-HT2           |
+| 5-HT2A          |
+| 5-HT2B          |
+| 5-HT7           |
+| 5PtaseI         |
+| 76P             |
+| 7A5             |
+#+end_example
 
-** Map TAIR accessions to uniprot
+** Map gene accessions to uniprot
 :PROPERTIES:
 :ID:       8a927d9b-97df-4fc6-9a31-0757d6cdf499
 :END:
 Gene Identifier URLs sometimes fail to resolve because of errors in resolution or because of paywall restrictions. An example is
 the Arabidopsis Thaliana Internet Resource (https://arabidopsis.org, TAIR). This query translates TAIR accessions to uniprot IDs.
 
-*** SPARQL query
-:PROPERTIES:
-:ID:       7d950dd6-f463-49a7-a3ef-27f8cc01bb6d
-:END:
 #+name: sparql.idr.tair2uniprot
 #+begin_src sparql
   <<sparql-prefixes>>
@@ -1000,10 +438,11 @@ the Arabidopsis Thaliana Internet Resource (https://arabidopsis.org, TAIR). This
       ?tair_accession up:database database:TAIR ;
       }
   }
-  limit 100
+  limit 20
 #+end_src
 
-#+RESULTS[d4d664d144eaea3061eb3e0a08769afc3bc11c7e]:
+#+RESULTS[5eb0702b213bb1b01ddec6173252445a262d6783]: sparql.idr.tair2uniprot
+#+begin_example
 | tair_accession                         | protein                                    |
 |----------------------------------------+--------------------------------------------|
 | http://purl.uniprot.org/tair/AT1G02720 | http://purl.uniprot.org/uniprot/Q9FWY9     |
@@ -1026,88 +465,9 @@ the Arabidopsis Thaliana Internet Resource (https://arabidopsis.org, TAIR). This
 | http://purl.uniprot.org/tair/AT1G08660 | http://purl.uniprot.org/uniprot/Q8VZJ0     |
 | http://purl.uniprot.org/tair/AT1G11730 | http://purl.uniprot.org/uniprot/Q9SAA4     |
 | http://purl.uniprot.org/tair/AT1G11730 | http://purl.uniprot.org/uniprot/W8Q7D4     |
-| http://purl.uniprot.org/tair/AT1G13250 | http://purl.uniprot.org/uniprot/Q0V7R1     |
-| http://purl.uniprot.org/tair/AT1G13250 | http://purl.uniprot.org/uniprot/W8Q3T2     |
-| http://purl.uniprot.org/tair/AT1G14070 | http://purl.uniprot.org/uniprot/Q9XI81     |
-| http://purl.uniprot.org/tair/AT1G14590 | http://purl.uniprot.org/uniprot/Q6DBI2     |
-| http://purl.uniprot.org/tair/AT1G14590 | http://purl.uniprot.org/uniprot/Q9MA24     |
-| http://purl.uniprot.org/tair/AT1G18580 | http://purl.uniprot.org/uniprot/Q949Q1     |
-| http://purl.uniprot.org/tair/AT1G18690 | http://purl.uniprot.org/uniprot/Q9M9U0     |
-| http://purl.uniprot.org/tair/AT1G19360 | http://purl.uniprot.org/uniprot/Q9LN62     |
-| http://purl.uniprot.org/tair/AT1G20575 | http://purl.uniprot.org/uniprot/Q9LM93     |
-| http://purl.uniprot.org/tair/AT1G21480 | http://purl.uniprot.org/uniprot/F4HY10     |
-| http://purl.uniprot.org/tair/AT1G21480 | http://purl.uniprot.org/uniprot/F4HY11     |
-| http://purl.uniprot.org/tair/AT1G24070 | http://purl.uniprot.org/uniprot/A0A068FJK1 |
-| http://purl.uniprot.org/tair/AT1G24070 | http://purl.uniprot.org/uniprot/A0A1P8AMK2 |
-| http://purl.uniprot.org/tair/AT1G24070 | http://purl.uniprot.org/uniprot/Q9LR87     |
-| http://purl.uniprot.org/tair/AT1G24170 | http://purl.uniprot.org/uniprot/O48684     |
-| http://purl.uniprot.org/tair/AT1G24170 | http://purl.uniprot.org/uniprot/W8PW12     |
-| http://purl.uniprot.org/tair/AT1G27440 | http://purl.uniprot.org/uniprot/Q9FZJ1     |
-| http://purl.uniprot.org/tair/AT1G27600 | http://purl.uniprot.org/uniprot/Q9SXC4     |
-| http://purl.uniprot.org/tair/AT1G27600 | http://purl.uniprot.org/uniprot/W8PW09     |
-| http://purl.uniprot.org/tair/AT1G32930 | http://purl.uniprot.org/uniprot/Q9MAP8     |
-| http://purl.uniprot.org/tair/AT1G33250 | http://purl.uniprot.org/uniprot/Q9C881     |
-| http://purl.uniprot.org/tair/AT1G53290 | http://purl.uniprot.org/uniprot/Q8L7M1     |
-| http://purl.uniprot.org/tair/AT1G53290 | http://purl.uniprot.org/uniprot/W8Q798     |
-| http://purl.uniprot.org/tair/AT1G70090 | http://purl.uniprot.org/uniprot/O04536     |
-| http://purl.uniprot.org/tair/AT1G70090 | http://purl.uniprot.org/uniprot/W8Q3M8     |
-| http://purl.uniprot.org/tair/AT1G70630 | http://purl.uniprot.org/uniprot/A0A1P8ASV0 |
-| http://purl.uniprot.org/tair/AT1G70630 | http://purl.uniprot.org/uniprot/A0A1P8ASW3 |
-| http://purl.uniprot.org/tair/AT1G70630 | http://purl.uniprot.org/uniprot/A0A1P8ASW5 |
-| http://purl.uniprot.org/tair/AT1G70630 | http://purl.uniprot.org/uniprot/A0A1P8ASZ1 |
-| http://purl.uniprot.org/tair/AT1G70630 | http://purl.uniprot.org/uniprot/A0A1P8AT04 |
-| http://purl.uniprot.org/tair/AT1G70630 | http://purl.uniprot.org/uniprot/F4I6V0     |
-| http://purl.uniprot.org/tair/AT1G71070 | http://purl.uniprot.org/uniprot/Q9C9A1     |
-| http://purl.uniprot.org/tair/AT1G74380 | http://purl.uniprot.org/uniprot/Q9CA75     |
-| http://purl.uniprot.org/tair/AT1G74420 | http://purl.uniprot.org/uniprot/A0A1P8AN91 |
-| http://purl.uniprot.org/tair/AT1G74420 | http://purl.uniprot.org/uniprot/A0A1P8ANB1 |
-| http://purl.uniprot.org/tair/AT1G74420 | http://purl.uniprot.org/uniprot/F4HVN0     |
-| http://purl.uniprot.org/tair/AT1G74420 | http://purl.uniprot.org/uniprot/Q56YH9     |
-| http://purl.uniprot.org/tair/AT1G74420 | http://purl.uniprot.org/uniprot/Q9CA71     |
-| http://purl.uniprot.org/tair/AT1G74420 | http://purl.uniprot.org/uniprot/W8Q3K1     |
-| http://purl.uniprot.org/tair/AT1G74680 | http://purl.uniprot.org/uniprot/Q93ZD5     |
-| http://purl.uniprot.org/tair/AT1G74800 | http://purl.uniprot.org/uniprot/Q8RX55     |
-| http://purl.uniprot.org/tair/AT1G75110 | http://purl.uniprot.org/uniprot/Q9C9Q5     |
-| http://purl.uniprot.org/tair/AT1G75120 | http://purl.uniprot.org/uniprot/Q9C9Q6     |
-| http://purl.uniprot.org/tair/AT1G77130 | http://purl.uniprot.org/uniprot/Q8W4A7     |
-| http://purl.uniprot.org/tair/AT1G77130 | http://purl.uniprot.org/uniprot/W8Q752     |
-| http://purl.uniprot.org/tair/AT2G02060 | http://purl.uniprot.org/uniprot/A0A1P8B1K3 |
-| http://purl.uniprot.org/tair/AT2G02060 | http://purl.uniprot.org/uniprot/Q7X887     |
-| http://purl.uniprot.org/tair/AT2G02060 | http://purl.uniprot.org/uniprot/Q9MAN4     |
-| http://purl.uniprot.org/tair/AT2G03220 | http://purl.uniprot.org/uniprot/Q9SWH5     |
-| http://purl.uniprot.org/tair/AT2G03220 | http://purl.uniprot.org/uniprot/W8PV36     |
-| http://purl.uniprot.org/tair/AT2G20370 | http://purl.uniprot.org/uniprot/Q7XJ98     |
-| http://purl.uniprot.org/tair/AT2G20810 | http://purl.uniprot.org/uniprot/Q9SKT6     |
-| http://purl.uniprot.org/tair/AT2G20810 | http://purl.uniprot.org/uniprot/W8PV18     |
-| http://purl.uniprot.org/tair/AT2G22900 | http://purl.uniprot.org/uniprot/O81007     |
-| http://purl.uniprot.org/tair/AT2G24630 | http://purl.uniprot.org/uniprot/Q9SJA2     |
-| http://purl.uniprot.org/tair/AT2G24630 | http://purl.uniprot.org/uniprot/W8Q3F7     |
-| http://purl.uniprot.org/tair/AT2G25300 | http://purl.uniprot.org/uniprot/A0A1P8B0G1 |
-| http://purl.uniprot.org/tair/AT2G25300 | http://purl.uniprot.org/uniprot/Q5XEZ1     |
-| http://purl.uniprot.org/tair/AT2G25300 | http://purl.uniprot.org/uniprot/W8Q717     |
-| http://purl.uniprot.org/tair/AT2G26100 | http://purl.uniprot.org/uniprot/A0A1P8B0L1 |
-| http://purl.uniprot.org/tair/AT2G26100 | http://purl.uniprot.org/uniprot/Q66GS2     |
-| http://purl.uniprot.org/tair/AT2G26100 | http://purl.uniprot.org/uniprot/W8PV11     |
-| http://purl.uniprot.org/tair/AT2G31960 | http://purl.uniprot.org/uniprot/A0A1P8AXZ6 |
-| http://purl.uniprot.org/tair/AT2G31960 | http://purl.uniprot.org/uniprot/Q9SL03     |
-| http://purl.uniprot.org/tair/AT2G31990 | http://purl.uniprot.org/uniprot/A0A1P8AZR3 |
-| http://purl.uniprot.org/tair/AT2G31990 | http://purl.uniprot.org/uniprot/A0A1P8AZT3 |
-| http://purl.uniprot.org/tair/AT2G31990 | http://purl.uniprot.org/uniprot/Q5XF04     |
-| http://purl.uniprot.org/tair/AT2G32430 | http://purl.uniprot.org/uniprot/Q9ZV71     |
-| http://purl.uniprot.org/tair/AT2G32430 | http://purl.uniprot.org/uniprot/W8PUZ8     |
-| http://purl.uniprot.org/tair/AT2G33570 | http://purl.uniprot.org/uniprot/O22807     |
-| http://purl.uniprot.org/tair/AT2G35100 | http://purl.uniprot.org/uniprot/Q6DBG8     |
-| http://purl.uniprot.org/tair/AT2G35610 | http://purl.uniprot.org/uniprot/Q8VXZ5     |
-| http://purl.uniprot.org/tair/AT2G35650 | http://purl.uniprot.org/uniprot/A0A1P8B2I0 |
-| http://purl.uniprot.org/tair/AT2G35650 | http://purl.uniprot.org/uniprot/A0A1P8B2I3 |
-| http://purl.uniprot.org/tair/AT2G35650 | http://purl.uniprot.org/uniprot/Q9ZQN8     |
-| http://purl.uniprot.org/tair/AT2G35650 | http://purl.uniprot.org/uniprot/W8PUY9     |
-| http://purl.uniprot.org/tair/AT2G36850 | http://purl.uniprot.org/uniprot/Q9SJM0     |
-| http://purl.uniprot.org/tair/AT2G38650 | http://purl.uniprot.org/uniprot/A0A1P8AX74 |
-| http://purl.uniprot.org/tair/AT2G38650 | http://purl.uniprot.org/uniprot/Q9ZVI7     |
-| http://purl.uniprot.org/tair/AT2G38650 | http://purl.uniprot.org/uniprot/W8Q6X1     |
+#+end_example
 
-*** ttl wrapper
+*** ttl wrapper                                                      :noexport:
 :PROPERTIES:
 :ID:       61abe123-b04d-4eb4-9963-3137adf935e1
 :END:
@@ -1145,6 +505,7 @@ the gene identifiers, e.g.
 
 This enables queries to Uniprot that find a protein encoded by a gene with a given gene identifier:
 #+name: sparql.uniprot.protein_gene
+#+caption: Query against Uniprot SPARQL endpoint to retrieve proteins encoded by gene with ID ENSG00000111581.
 #+begin_src sparql :url https://sparql.uniprot.org/sparql :cache no :eval no-export
   <<sparql-prefixes>>
   prefix bgee: <http://purl.uniprot.org/bgee/>
@@ -1158,565 +519,67 @@ This enables queries to Uniprot that find a protein encoded by a gene with a giv
   limit 10
   #+end_src
 
-#+RESULTS:
+#+RESULTS: sparql.uniprot.protein_gene
+#+begin_example
 | up_protein                             |
 |----------------------------------------|
 | http://purl.uniprot.org/uniprot/P57740 |
+#+end_example
 
 
-We wrap Query [[ref:sparql.uniprot.protein_gene]] in a =service= statement as follows, to find the protein encoded by a gene being referenced
+We wrap Query Cref:sparql.uniprot.protein_gene in a =service= statement as follows, to find the protein encoded by a gene being referenced
 in the "Gene Identifier" key-value annotation:
 
 #+name: sparql.idr-to-uniprot.protein_gene
     #+begin_src sparql
-      <<sparql-prefixes>>
-      prefix bgee: <http://purl.uniprot.org/bgee/>
+  <<sparql-prefixes>>
+  prefix bgee: <http://purl.uniprot.org/bgee/>
 
-      select distinct ?img ?bgee ?up_protein where {
-        <https://idr.openmicroscopy.org/Project/52>
-        dcterms:hasPart/dcterms:hasPart ?img .
-        ?img a omecore:Image ;
-             omecore:hasAnnotation/omecore:mapEntry [omecore:key ?key; omecore:value ?value] .
-        filter(?key = "Gene Identifier")
-        bind(iri(concat(str(bgee:),?value)) as ?bgee) .
+  select distinct ?img ?up_protein where {
+    <https://idr.openmicroscopy.org/Project/52>
+    dcterms:hasPart/dcterms:hasPart ?img .
+    ?img a omecore:Image ;
+         omecore:hasAnnotation/omecore:mapEntry [omecore:key ?key; omecore:value ?value] .
+    filter(?key = "Gene Identifier")
+    bind(iri(concat(str(bgee:),?value)) as ?bgee) .
 
-        SERVICE <https://qlever.dev/api/uniprot> {
-          ?up_protein a up:Protein ;
-                      up:reviewed true ;
-                      rdfs:seeAlso ?bgee .
-          }
+    SERVICE <https://qlever.dev/api/uniprot> {
+      ?up_protein a up:Protein ;
+                  up:reviewed true ;
+                  rdfs:seeAlso ?bgee .
       }
+  }
+  limit 20
 #+end_src
 
-#+RESULTS[59bc0b992b17aa4f28eb103a7862d972252511f6]:
-| img                                          | bgee                                         | up_protein                             |
-|----------------------------------------------+----------------------------------------------+----------------------------------------|
-| https://idr.openmicroscopy.org/Image/1885617 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885618 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885619 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885620 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885621 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885622 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885623 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885624 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885625 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885626 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885627 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885628 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885629 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885630 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885631 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885632 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885633 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885634 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885635 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885636 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885637 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885638 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885639 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885640 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885641 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885642 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885643 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885644 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885645 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885646 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885647 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885648 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885649 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885650 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885651 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885652 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885653 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885654 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885655 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885656 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885657 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885658 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885659 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885660 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885661 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885662 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885663 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885664 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885665 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885666 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885667 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885668 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885669 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885670 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885671 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885672 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885673 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885674 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885675 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885676 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885677 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885678 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885679 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885680 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885681 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885682 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885683 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885684 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885685 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885686 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885687 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885688 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885689 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885690 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885691 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885692 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885693 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885694 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885695 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885696 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885697 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885698 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885699 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885700 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885701 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885702 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885703 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885704 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885705 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885706 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885707 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885708 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885709 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885710 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885711 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885712 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885713 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885714 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885715 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885716 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885717 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885718 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885719 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885720 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885721 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885722 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885723 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885724 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885725 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885726 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885727 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885728 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885729 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885730 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885731 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885732 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885733 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885734 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885735 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885736 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885737 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885738 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885739 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885740 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885741 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885742 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885743 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885744 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885745 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885746 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885747 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885748 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885749 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885750 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885751 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885752 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885753 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885754 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885755 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885756 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885757 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885758 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885759 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885760 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885761 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885762 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885763 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885764 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885765 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885766 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885767 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885768 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885769 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885770 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885771 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885772 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885773 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885774 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885775 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885776 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885777 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885778 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885779 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885780 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885781 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885782 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885783 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885784 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885785 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885786 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885787 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885788 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885789 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885790 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885791 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885792 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885793 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885794 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885795 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885796 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885797 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885798 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885799 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885800 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885801 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885802 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885803 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885804 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885805 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885806 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885807 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885808 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885809 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885810 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885811 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885812 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885813 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885814 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885815 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885816 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885817 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885818 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885819 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885820 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885821 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885822 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885823 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885824 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885825 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885826 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885827 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885828 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885829 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885830 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885831 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885832 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885833 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885834 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885835 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885836 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885837 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885838 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885839 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885840 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885841 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885842 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885843 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885844 | http://purl.uniprot.org/bgee/ENSG00000110713 | http://purl.uniprot.org/uniprot/P52948 |
-| https://idr.openmicroscopy.org/Image/1885845 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885846 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885847 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885848 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885849 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885850 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885851 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885852 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885853 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885854 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885855 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885856 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885857 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885858 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885859 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885860 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885861 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885862 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885863 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885864 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885865 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885866 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885867 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885868 | http://purl.uniprot.org/bgee/ENSG00000111581 | http://purl.uniprot.org/uniprot/P57740 |
-| https://idr.openmicroscopy.org/Image/1885869 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
-| https://idr.openmicroscopy.org/Image/1885870 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
-| https://idr.openmicroscopy.org/Image/1885871 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
-| https://idr.openmicroscopy.org/Image/1885872 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
-| https://idr.openmicroscopy.org/Image/1885873 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
-| https://idr.openmicroscopy.org/Image/1885874 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
-| https://idr.openmicroscopy.org/Image/1885875 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
-| https://idr.openmicroscopy.org/Image/1885876 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
-| https://idr.openmicroscopy.org/Image/1885877 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
-| https://idr.openmicroscopy.org/Image/1885878 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
-| https://idr.openmicroscopy.org/Image/1885879 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
-| https://idr.openmicroscopy.org/Image/1885880 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
-| https://idr.openmicroscopy.org/Image/1885881 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
-| https://idr.openmicroscopy.org/Image/1885882 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
-| https://idr.openmicroscopy.org/Image/1885883 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
-| https://idr.openmicroscopy.org/Image/1885884 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
-| https://idr.openmicroscopy.org/Image/1885885 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
-| https://idr.openmicroscopy.org/Image/1885886 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
-| https://idr.openmicroscopy.org/Image/1885887 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
-| https://idr.openmicroscopy.org/Image/1885888 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
-| https://idr.openmicroscopy.org/Image/1885889 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
-| https://idr.openmicroscopy.org/Image/1885890 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
-| https://idr.openmicroscopy.org/Image/1885891 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
-| https://idr.openmicroscopy.org/Image/1885892 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
-| https://idr.openmicroscopy.org/Image/1885893 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
-| https://idr.openmicroscopy.org/Image/1885894 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
-| https://idr.openmicroscopy.org/Image/1885895 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
-| https://idr.openmicroscopy.org/Image/1885896 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
-| https://idr.openmicroscopy.org/Image/1885897 | http://purl.uniprot.org/bgee/ENSG00000075188 | http://purl.uniprot.org/uniprot/Q8NFH4 |
-| https://idr.openmicroscopy.org/Image/1885898 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885899 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885900 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885901 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885902 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885903 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885904 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885905 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885906 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885907 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885908 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885909 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885910 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885911 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885912 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885913 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885914 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885915 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885916 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885917 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885918 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885919 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885920 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885921 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885922 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885923 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885924 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885925 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885926 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885927 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885928 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885929 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885930 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885931 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885932 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885933 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885934 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885935 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885936 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885937 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885938 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885939 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885940 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885941 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885942 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885943 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885944 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885945 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885946 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885947 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885948 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885949 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885950 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885951 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885952 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885953 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885954 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885955 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885956 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885957 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885958 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885959 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885960 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885961 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885962 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885963 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885964 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885965 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885966 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885967 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885968 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885969 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885970 | http://purl.uniprot.org/bgee/ENSG00000069248 | http://purl.uniprot.org/uniprot/Q8WUM0 |
-| https://idr.openmicroscopy.org/Image/1885971 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885972 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885973 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885974 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885975 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885976 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885977 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885978 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885979 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885980 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885981 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885982 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885983 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885984 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885985 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885986 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885987 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885988 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885989 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885990 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885991 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885992 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885993 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885994 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885995 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1885996 | http://purl.uniprot.org/bgee/ENSG00000125450 | http://purl.uniprot.org/uniprot/Q9BW27 |
-| https://idr.openmicroscopy.org/Image/1885997 | http://purl.uniprot.org/bgee/ENSG00000125450 | http://purl.uniprot.org/uniprot/Q9BW27 |
-| https://idr.openmicroscopy.org/Image/1885998 | http://purl.uniprot.org/bgee/ENSG00000125450 | http://purl.uniprot.org/uniprot/Q9BW27 |
-| https://idr.openmicroscopy.org/Image/1885999 | http://purl.uniprot.org/bgee/ENSG00000125450 | http://purl.uniprot.org/uniprot/Q9BW27 |
-| https://idr.openmicroscopy.org/Image/1886000 | http://purl.uniprot.org/bgee/ENSG00000125450 | http://purl.uniprot.org/uniprot/Q9BW27 |
-| https://idr.openmicroscopy.org/Image/1886001 | http://purl.uniprot.org/bgee/ENSG00000125450 | http://purl.uniprot.org/uniprot/Q9BW27 |
-| https://idr.openmicroscopy.org/Image/1886002 | http://purl.uniprot.org/bgee/ENSG00000125450 | http://purl.uniprot.org/uniprot/Q9BW27 |
-| https://idr.openmicroscopy.org/Image/1886003 | http://purl.uniprot.org/bgee/ENSG00000125450 | http://purl.uniprot.org/uniprot/Q9BW27 |
-| https://idr.openmicroscopy.org/Image/1886004 | http://purl.uniprot.org/bgee/ENSG00000125450 | http://purl.uniprot.org/uniprot/Q9BW27 |
-| https://idr.openmicroscopy.org/Image/1886005 | http://purl.uniprot.org/bgee/ENSG00000125450 | http://purl.uniprot.org/uniprot/Q9BW27 |
-| https://idr.openmicroscopy.org/Image/1886006 | http://purl.uniprot.org/bgee/ENSG00000125450 | http://purl.uniprot.org/uniprot/Q9BW27 |
-| https://idr.openmicroscopy.org/Image/1886007 | http://purl.uniprot.org/bgee/ENSG00000125450 | http://purl.uniprot.org/uniprot/Q9BW27 |
-| https://idr.openmicroscopy.org/Image/1886008 | http://purl.uniprot.org/bgee/ENSG00000125450 | http://purl.uniprot.org/uniprot/Q9BW27 |
-| https://idr.openmicroscopy.org/Image/1886009 | http://purl.uniprot.org/bgee/ENSG00000125450 | http://purl.uniprot.org/uniprot/Q9BW27 |
-| https://idr.openmicroscopy.org/Image/1886010 | http://purl.uniprot.org/bgee/ENSG00000125450 | http://purl.uniprot.org/uniprot/Q9BW27 |
-| https://idr.openmicroscopy.org/Image/1886011 | http://purl.uniprot.org/bgee/ENSG00000125450 | http://purl.uniprot.org/uniprot/Q9BW27 |
-| https://idr.openmicroscopy.org/Image/1886012 | http://purl.uniprot.org/bgee/ENSG00000125450 | http://purl.uniprot.org/uniprot/Q9BW27 |
-| https://idr.openmicroscopy.org/Image/1886013 | http://purl.uniprot.org/bgee/ENSG00000125450 | http://purl.uniprot.org/uniprot/Q9BW27 |
-| https://idr.openmicroscopy.org/Image/1886014 | http://purl.uniprot.org/bgee/ENSG00000125450 | http://purl.uniprot.org/uniprot/Q9BW27 |
-| https://idr.openmicroscopy.org/Image/1886015 | http://purl.uniprot.org/bgee/ENSG00000125450 | http://purl.uniprot.org/uniprot/Q9BW27 |
-| https://idr.openmicroscopy.org/Image/1886016 | http://purl.uniprot.org/bgee/ENSG00000125450 | http://purl.uniprot.org/uniprot/Q9BW27 |
-| https://idr.openmicroscopy.org/Image/1886017 | http://purl.uniprot.org/bgee/ENSG00000125450 | http://purl.uniprot.org/uniprot/Q9BW27 |
-| https://idr.openmicroscopy.org/Image/1886018 | http://purl.uniprot.org/bgee/ENSG00000125450 | http://purl.uniprot.org/uniprot/Q9BW27 |
-| https://idr.openmicroscopy.org/Image/1886019 | http://purl.uniprot.org/bgee/ENSG00000125450 | http://purl.uniprot.org/uniprot/Q9BW27 |
-| https://idr.openmicroscopy.org/Image/1886020 | http://purl.uniprot.org/bgee/ENSG00000125450 | http://purl.uniprot.org/uniprot/Q9BW27 |
-| https://idr.openmicroscopy.org/Image/1886021 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886022 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886023 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886024 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886025 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886026 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886027 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886028 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886029 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886030 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886031 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886032 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886033 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886034 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886035 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886036 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886037 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886038 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886039 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886040 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886041 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886042 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886043 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886044 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886045 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886046 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886047 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886048 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886049 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886050 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1886051 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1886052 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1886053 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1886054 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1886055 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1886056 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1886057 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1886058 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1886059 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1886060 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1886061 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1886062 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1886063 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1886064 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1886065 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1886066 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1886067 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1886068 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1886069 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1886070 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1886071 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1886072 | http://purl.uniprot.org/bgee/ENSG00000030066 | http://purl.uniprot.org/uniprot/Q12769 |
-| https://idr.openmicroscopy.org/Image/1886073 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886074 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886075 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886076 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886077 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886078 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886079 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886080 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886081 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886082 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886083 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886084 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886085 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886086 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886087 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886088 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886089 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886090 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886091 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886092 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886093 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886094 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886095 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886096 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886097 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886098 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886099 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886100 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886101 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886102 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886103 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886104 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886105 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886106 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886107 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886108 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886109 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886110 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886111 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886112 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886113 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886114 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886115 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886116 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886117 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886118 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886119 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886120 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886121 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886122 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886123 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886124 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886125 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886126 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886127 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886128 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886129 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886130 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886131 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886132 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886133 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886134 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886135 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886136 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886137 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886138 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886139 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
-| https://idr.openmicroscopy.org/Image/1886140 | http://purl.uniprot.org/bgee/ENSG00000085415 | http://purl.uniprot.org/uniprot/Q96EE3 |
+#+RESULTS[626247dca63fe2da2f7a17b71c1f31383163c5ab]: sparql.idr-to-uniprot.protein_gene
+#+begin_example
+| img                                          | up_protein                             |
+|----------------------------------------------+----------------------------------------|
+| https://idr.openmicroscopy.org/Image/1885617 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885618 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885619 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885620 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885621 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885622 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885623 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885624 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885625 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885626 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885627 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885628 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885629 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885630 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885631 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885632 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885633 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885634 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885635 | http://purl.uniprot.org/uniprot/P57740 |
+| https://idr.openmicroscopy.org/Image/1885636 | http://purl.uniprot.org/uniprot/P57740 |
+#+end_example
 
-*** ttl tangling
+
+*** ttl wrapper                                                      :noexport:
 :PROPERTIES:
 :ID:       afe12060-acd9-49d7-8ba0-f239b9a4e6ba
 :END:
@@ -1739,10 +602,6 @@ in the "Gene Identifier" key-value annotation:
 :END:
 How many gene identifier URLs fail to resolve?
 
-*** SPARQL query
-:PROPERTIES:
-:ID:       3c62b8cd-a2f0-43aa-aa64-a63e66ddbcdd
-:END:
 #+name: sparql.idr.gene-identifiers
 #+begin_src sparql :results output text file :file gene_identifier_urls.txt
   <<sparql-prefixes>>
@@ -1763,10 +622,12 @@ How many gene identifier URLs fail to resolve?
 :ID:       df9d6811-eadd-4dae-a54a-cd6a54f77d7e
 :END:
 #+begin_src bash :results file link :file response.txt :eval no
-  while read line; do curl -o /dev/null -s -w "%{http_code}\n" $line >> response.txt; done < gene_identifier_urls.txt 
+      while read line
+      do curl -o /dev/null -s -w "%{http_code}\n" $line >> response.txt
+      done < gene_identifier_urls.txt 
 #+end_src
 
-*** ttl wrapper 
+*** ttl wrapper                                                      :noexport:
 :PROPERTIES:
 :ID:       7fcb7ff3-813e-400b-be47-b64d0ec95616
 :END:
