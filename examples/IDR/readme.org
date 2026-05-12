@@ -185,6 +185,601 @@ Common prefixes in =ttl= syntax go here and can be included into =ttl= snippets 
 #+end_src
 
 
+* Unique annotation keys and usage frequency
+:PROPERTIES:
+:ID:       3ac9ffd4-1a54-443f-b1f9-4952a58d0779
+:END:
+
+
+*** SPARQL query
+:PROPERTIES:
+:ID:       7b33c079-ec1b-4a81-95d3-86c83b2580d8
+:END:
+#+name: sparql.idr.image.key_usage
+#+begin_src sparql
+  <<sparql-prefixes>>
+SELECT ?key (COUNT(?value) AS ?n_usage)
+WHERE {
+  ?img a omecore:Image;
+       omecore:hasAnnotation/omecore:mapEntry [
+           omecore:key ?key;
+           omecore:value ?value
+       ] .
+}
+GROUP BY ?key
+ORDER BY DESC(?n_usage)
+#+end_src
+
+#+RESULTS[9892787a21a9de06379013626431f7cd8e1a98aa]: sparql.idr.image.key_usage
+| key                                                          |  n_usage |
+|--------------------------------------------------------------+----------|
+| Organism                                                     | 14187208 |
+| Gene Identifier URL                                          | 13179301 |
+| Gene Symbol                                                  | 10743692 |
+| Gene Identifier                                              | 10743692 |
+| Cell Line                                                    |  7577518 |
+| Organism Part                                                |  6475946 |
+| Organism Part Identifier                                     |  6452324 |
+| Pathology Identifier                                         |  6407573 |
+| Pathology                                                    |  6407573 |
+| Sex                                                          |  6171454 |
+| Age                                                          |  6147978 |
+| Antibody Identifier                                          |  5947474 |
+| Antibody Identifier URL                                      |  5946893 |
+| Dilution Factor                                              |  5941710 |
+| Individual                                                   |  5935036 |
+| Human Protein Atlas version                                  |  5931242 |
+| Retrieval Method                                             |  5931242 |
+| Ensembl version                                              |  5931242 |
+| Channels                                                     |  4171941 |
+| Compound Name                                                |  3619585 |
+| Compound Name URL                                            |  2980250 |
+| siRNA Pool Identifier                                        |  2335422 |
+| RefSeq GI Number                                             |  2178976 |
+| RefSeq Accession                                             |  2092322 |
+| siRNA Identifier                                             |  2021726 |
+| Reagent Identifier                                           |  1893648 |
+| Library                                                      |  1834560 |
+| SMILES                                                       |  1351295 |
+| PubChem CID                                                  |  1350877 |
+| InChIKey                                                     |  1316368 |
+| Sense Sequence                                               |  1297398 |
+| Antisense Sequence                                           |  1267064 |
+| Compound SMILES                                              |  1012988 |
+| Quality Control                                              |   973090 |
+| Compound Concentration (microMolar)                          |   960077 |
+| Control Type                                                 |   935803 |
+| Dose                                                         |   888797 |
+| Compound Broad Identifier URL                                |   830202 |
+| Compound Broad Identifier Short                              |   830202 |
+| Compound Broad Identifier                                    |   830202 |
+| Compound Source                                              |   830088 |
+| Compound Group                                               |   772578 |
+| Cell Line with Markers                                       |   739991 |
+| Analysis Gene Annotation Build                               |   735505 |
+| Reagent Design Gene Annotation Build                         |   727212 |
+| Phenotype                                                    |   684762 |
+| Compound Set                                                 |   661655 |
+| Phenotype Term Accession URL                                 |   618257 |
+| Phenotype Term Accession                                     |   618156 |
+| Phenotype Term Name                                          |   618064 |
+| Transcript Identifier                                        |   582759 |
+| Compound MoA                                                 |   566875 |
+| Has Phenotype                                                |   565576 |
+| Concentration (microMolar)                                   |   540689 |
+| PubChem InChIKey                                             |   527862 |
+| Cell Type                                                    |   527347 |
+| Gene Annotation Comments                                     |   519236 |
+| Cell Line Comment                                            |   473242 |
+| Phenotype Annotation Level                                   |   439363 |
+| Control Comments                                             |   417577 |
+| Strain                                                       |   385889 |
+| ChEMBL Identifier URL                                        |   361514 |
+| Vendor Catalog Identifier                                    |   339606 |
+| Compound Identifier                                          |   327728 |
+| Compound PubChem CID                                         |   327728 |
+| Compound ChEMBL ID                                           |   326612 |
+| Unichem URL                                                  |   326134 |
+| Compound General Target Class                                |   298401 |
+| Compound General activity                                    |   298401 |
+| Compound DrugBank Identifier                                 |   297972 |
+| Compound Target Entrez IDs                                   |   282348 |
+| ORF Identifier                                               |   282320 |
+| Original Gene Target                                         |   277116 |
+| siRNA Sequences                                              |   273720 |
+| ORF Comments                                                 |   271216 |
+| Comments                                                     |   268627 |
+| Patient ID                                                   |   259200 |
+| Culture                                                      |   259200 |
+| Viability_norm                                               |   258192 |
+| Viability                                                    |   254148 |
+| Subcellular Localization Based On Secondary Screening        |   236224 |
+| ORF Identifier URL                                           |   236224 |
+| Scored As Nuclear Foci At Initial Stage                      |   236224 |
+| hORFeome V5.1 Clone Description                              |   234184 |
+| Number of cells                                              |   229284 |
+| Gene Annotation Build                                        |   221006 |
+| Class                                                        |   214975 |
+| Treatment time (h)                                           |   207999 |
+| Manuscript Number                                            |   207999 |
+| Experimental Batch                                           |   207999 |
+| IUPAC                                                        |   207927 |
+| Genotype                                                     |   199171 |
+| Mitocheck siRNA Identifier                                   |   191183 |
+| Successful Transfer                                          |   190464 |
+| Treatment Type                                               |   190464 |
+| Batch Number                                                 |   190464 |
+| HGNC Gene Symbol                                             |   163395 |
+| PubChem URL                                                  |   161319 |
+| Processed Image Channel                                      |   151189 |
+| Compound Selectivity Updated                                 |   147456 |
+| Compound Treatment                                           |   147456 |
+| Mutation Detailed                                            |   147456 |
+| siRNA Sequence 2                                             |   145490 |
+| siRNA Sequence 1                                             |   145490 |
+| siRNA Sequence 3                                             |   145490 |
+| siRNA Sequence 4                                             |   145490 |
+| Cycle Number                                                 |   144818 |
+| Tile Position                                                |   144818 |
+| Stimulation                                                  |   144818 |
+| Percentage Inhibition (DPC)                                  |   143736 |
+| siRNA Library Name                                           |   133252 |
+| Protein                                                      |   132234 |
+| Addgene ID                                                   |   131476 |
+| Protein Name                                                 |   131476 |
+| Subcellular Localization                                     |   131476 |
+| RefSeq Locus                                                 |   131452 |
+| Hit Compound (over 75% activity)                             |   128040 |
+| Protein Sequence (aa)                                        |   127971 |
+| Protein URL                                                  |   125033 |
+| UniProt ID                                                   |   125033 |
+| Compound Class                                               |   122880 |
+| Compound Description                                         |   122784 |
+| IUPAC Name                                                   |   122419 |
+| BRD (short)                                                  |   119304 |
+| BRD                                                          |   119304 |
+| Purity (%)                                                   |   118872 |
+| Compound Action                                              |   117984 |
+| Broad Identifier                                             |   112809 |
+| Replicate Group                                              |   110252 |
+| Compound Secondary Name                                      |   102048 |
+| Compound Selectivity                                         |   101856 |
+| Environmental Stress                                         |    97920 |
+| Cells - Number of Objects                                    |    88128 |
+| Channels Comment                                             |    82873 |
+| Quality Control Comments                                     |    80933 |
+| Identifier                                                   |    72360 |
+| Score                                                        |    69919 |
+| Characteristics Comments                                     |    68992 |
+| Proprietary Compound                                         |    66642 |
+| Cell ID                                                      |    60480 |
+| Gene Symbol Synonyms                                         |    57522 |
+| Control Type Comments                                        |    55620 |
+| Number of Cells (DPC)                                        |    55608 |
+| CAS                                                          |    48303 |
+| Allele                                                       |    45925 |
+| RNAi Primer 1                                                |    44934 |
+| RNAi Primer 2                                                |    44934 |
+| Reagent Annotation Comments                                  |    44934 |
+| CAN Repeats                                                  |    44538 |
+| Off Target Effects                                           |    44538 |
+| siRNA Identifier URL                                         |    43766 |
+| Original RefSeq Target                                       |    42246 |
+| Original GeneID Target                                       |    42246 |
+| Original LocusLink Target                                    |    42114 |
+| Gene Model Status                                            |    42069 |
+| Gene In Secondary Screen                                     |    40602 |
+| RefSeq Hits                                                  |    39588 |
+| Image Comment                                                |    39314 |
+| shRNA                                                        |    36960 |
+| Compound Enzyme                                              |    36000 |
+| Overall Strong Inhibitor Gene Hit                            |    35893 |
+| Operetta Measurement                                         |    35883 |
+| Cell Line URL                                                |    35883 |
+| Operetta Plate Name                                          |    35883 |
+| Plate Issues                                                 |    35772 |
+| Gene Allele Name                                             |    35100 |
+| Median Replicate Correlation                                 |    35100 |
+| ORF Sequence                                                 |    34992 |
+| ChEMBL Identifier                                            |    34902 |
+| Donor Identifier                                             |    34674 |
+| Prestwick Chemical Library ID                                |    34482 |
+| Target Transcript                                            |    32724 |
+| Comment                                                      |    30311 |
+| Progenitor Cell Type                                         |    30213 |
+| BioSamples Identifier URL                                    |    30024 |
+| Disease State                                                |    30024 |
+| Results Measurements                                         |    30024 |
+| BioSamples Identifier                                        |    30024 |
+| Gene In Validation Screen                                    |    29333 |
+| RefSeq Accession URL                                         |    29280 |
+| Results Summary                                              |    29214 |
+| Media                                                        |    27656 |
+| Cell Line Morphotype                                         |    25872 |
+| Cell Type\Genetic Subtype (Neve et al., Cancer Cell 2006)    |    25872 |
+| Antibody                                                     |    23937 |
+| Potential Mitotic Hit At Gene Level                          |    23933 |
+| Diagnosis                                                    |    23712 |
+| Gene Name                                                    |    23402 |
+| In Annotated Set                                             |    23364 |
+| Phenoptye Annotation Level                                   |    20010 |
+| MMS treatment                                                |    18016 |
+| Well Coating                                                 |    17944 |
+| Protocol                                                     |    17582 |
+| Parasite Line                                                |    17408 |
+| Batch                                                        |    17377 |
+| Score - Nuclear fascin                                       |    17260 |
+| Gene Hit for YAP Localization Inconsistent With Cell Shape   |    17040 |
+| Product Use Annotation                                       |    16956 |
+| Score - Nuclear F-actin                                      |    16810 |
+| Publication Screen Name                                      |    15855 |
+| Cell Line Designation                                        |    15855 |
+| Motor Neuron DIV                                             |    15855 |
+| Donor Sex                                                    |    15855 |
+| Donor Age                                                    |    15855 |
+| Treatment Description                                        |    15855 |
+| Proprietary Compound Concentration (microMolar)              |    15102 |
+| Image File Type                                              |    14289 |
+| Position                                                     |    14040 |
+| Nuclear fascin                                               |    13860 |
+| Nuclear F-actin                                              |    13860 |
+| Plate Replicate                                              |    13824 |
+| Validated Mitotic Hit At Gene Level                          |    13570 |
+| Gene Description                                             |    13323 |
+| Replicate                                                    |    13208 |
+| MeSH Annotation                                              |    12420 |
+| Plate Subset                                                 |    12288 |
+| siRNA Annotation Comments                                    |    12060 |
+| Time                                                         |    11088 |
+| Overall Hit Gene Consensus                                   |     9579 |
+| Material Type                                                |     9546 |
+| HU Treatment                                                 |     9016 |
+| MMS Treatment                                                |     9016 |
+| Morphological Cluster ID                                     |     8208 |
+| DMSO solvent                                                 |     8096 |
+| Mutation                                                     |     8029 |
+| Treatment                                                    |     7973 |
+| GO Annotation                                                |     7884 |
+| Donor Age At Disease Onset                                   |     7737 |
+| siRNA Catalog Number                                         |     7608 |
+| Entrez Annotation                                            |     7164 |
+| Acquisition Time                                             |     6818 |
+| Acquisition Date                                             |     6818 |
+| Sample ID                                                    |     6810 |
+| GBIF Taxonomy                                                |     6579 |
+| Basis of Record                                              |     6579 |
+| Alternative Organism Name                                    |     6579 |
+| Voucher Specimen                                             |     6579 |
+| Specimen Description                                         |     6559 |
+| Ethnicity                                                    |     6547 |
+| Treatment Time                                               |     6491 |
+| Treatment Description Comments                               |     6063 |
+| Microscope Magnification                                     |     5977 |
+| Developmental Stage                                          |     5873 |
+| Comment Cell Line                                            |     5845 |
+| RNA Labelling                                                |     5684 |
+| Image File Comments                                          |     5457 |
+| Open Tree Taxonomy                                           |     5452 |
+| Assay Name                                                   |     5223 |
+| Protocol REF                                                 |     5203 |
+| Source Name                                                  |     5164 |
+| Scored Subcellular Localization By Secondary Screening       |     5128 |
+| Expression Pattern Description                               |     5057 |
+| Mouse ID                                                     |     5056 |
+| Visualisation Method                                         |     4984 |
+| Regulatory Hub                                               |     4974 |
+| Nearest Human Homologue                                      |     4968 |
+| Gene Annotation                                              |     4960 |
+| Pharmacological Treatment                                    |     4816 |
+| Stretch Duration                                             |     4816 |
+| Number of Spots                                              |     4753 |
+| Characteristics [Sex]                                        |     4753 |
+| Intensity of Spots                                           |     4423 |
+| Concentration                                                |     4216 |
+| In Validation Screen                                         |     4044 |
+| Author Hit                                                   |     3715 |
+| GO Biological Process                                        |     3695 |
+| GO Cellular Component                                        |     3695 |
+| GO Molecular Function                                        |     3695 |
+| GO Term                                                      |     3695 |
+| Patient Identifier                                           |     3600 |
+| Cell Cycle Stage                                             |     3489 |
+| Changed in allR                                              |     3393 |
+| Growth Media                                                 |     3221 |
+| Mechanism of Action (MoA)                                    |     3168 |
+| Cell Cycle Phase                                             |     3033 |
+| Tissue Type 1                                                |     3026 |
+| Tissue Type 2                                                |     3026 |
+| In Annotated and Active Set                                  |     2880 |
+| Target Gene Construct                                        |     2791 |
+| Target Gene GenBank Identifier                               |     2791 |
+| Target Operator                                              |     2791 |
+| TF Gene GenBank Identifier                                   |     2761 |
+| TF Gene Construct                                            |     2761 |
+| TF Operator                                                  |     2761 |
+| ch-TOG Multipolar Spindle Phenotype Hit                      |     2760 |
+| Temperature Sensitive Allele                                 |     2638 |
+| Compound MOA (from Ljosa et al, 2013)                        |     2528 |
+| Intron-targeting sgRNA                                       |     2390 |
+| Sister Chromatid Labelling                                   |     2380 |
+| Ethnic or Racial Group                                       |     2363 |
+| Clinical History                                             |     2299 |
+| Probe                                                        |     2279 |
+| Antibody Comment                                             |     1989 |
+| Experimental Condition                                       |     1981 |
+| Organ                                                        |     1965 |
+| Antibody Target 2                                            |     1962 |
+| Antibody Target 1                                            |     1962 |
+| Image Description                                            |     1960 |
+| Genome Editing                                               |     1916 |
+| Cluster                                                      |     1886 |
+| Preculture                                                   |     1784 |
+| Steps                                                        |     1784 |
+| Flow Control                                                 |     1784 |
+| Longitude                                                    |     1766 |
+| Geodetic Datum                                               |     1766 |
+| Latitude                                                     |     1766 |
+| Restrictive Temperature                                      |     1748 |
+| Assay Description                                            |     1670 |
+| Phenotype 1                                                  |     1650 |
+| Marker                                                       |     1608 |
+| Compound Comments                                            |     1580 |
+| In Final Gene Hit List                                       |     1570 |
+| ChemBank Annotation                                          |     1368 |
+| Label                                                        |     1344 |
+| Condition                                                    |     1255 |
+| Compound Comment                                             |     1200 |
+| siRNA Hit                                                    |     1158 |
+| Protocol 2                                                   |     1042 |
+| Disease Subtype                                              |     1034 |
+| Protocol 1                                                   |     1027 |
+| Observation                                                  |      963 |
+| Targeted Protein                                             |      938 |
+| Targeted Protein URL                                         |      938 |
+| Human Ortholog URL                                           |      899 |
+| Human Ortholog Gene Symbol                                   |      899 |
+| Human Ortholog                                               |      899 |
+| Series Location                                              |      874 |
+| Cell Origin                                                  |      874 |
+| Experiment Date                                              |      874 |
+| siRNA Dose                                                   |      864 |
+| EFO term                                                     |      840 |
+| Phenotype 2                                                  |      795 |
+| Mating Type                                                  |      780 |
+| Phenotype 30 Term Name                                       |      721 |
+| Original Image                                               |      670 |
+| Coordinate Precision                                         |      639 |
+| Elevation                                                    |      597 |
+| Antibody Concentration                                       |      576 |
+| Validated localizations                                      |      576 |
+| Refseq Transcript Exon(s) Targeted by siRNA                  |      576 |
+| Volume of Antibody                                           |      576 |
+| Core ID                                                      |      548 |
+| Cell Mask Comments                                           |      548 |
+| Image Number                                                 |      548 |
+| Metabric ID                                                  |      548 |
+| Age at Diagnosis                                             |      532 |
+| Tag Peptide Sequence                                         |      504 |
+| Degradation Tag                                              |      504 |
+| RNA FISH Probe 1                                             |      493 |
+| Genomic Locations Probe 3                                    |      493 |
+| Genomic Locations Probe 2                                    |      493 |
+| Genomic Locations Probe 1                                    |      493 |
+| Genomic Locations Probe 4                                    |      493 |
+| RNA FISH Probe 4                                             |      493 |
+| Cell Population                                              |      493 |
+| RNA FISH Probe                                               |      493 |
+| RNA FISH Probe 3                                             |      493 |
+| RNA FISH Probe 2                                             |      493 |
+| Cells in Image                                               |      493 |
+| Expt Date                                                    |      493 |
+| Ecotype                                                      |      463 |
+| ID                                                           |      462 |
+| Cell Type Comments                                           |      462 |
+| cBioPortal URL                                               |      460 |
+| Glycosyltransferase Family                                   |      458 |
+| In Situ Section                                              |      458 |
+| Forward Primer Sequence (5' - 3')                            |      458 |
+| Expression Pattern                                           |      458 |
+| Experimental Condition [Target Gene]                         |      458 |
+| Reverse Primer Sequence (5' - 3')                            |      458 |
+| Import Cargo Type                                            |      456 |
+| #NLSs                                                        |      456 |
+| Genetic Background                                           |      435 |
+| Compound Information                                         |      429 |
+| Compound Identifier (CAS Number)                             |      429 |
+| Compound Identifier (CAS Number) URL                         |      429 |
+| Experimental Conclusion                                      |      423 |
+| Cell Labels                                                  |      420 |
+| Genetic Perturbation                                         |      420 |
+| Experimental Replicate Date                                  |      420 |
+| Imaging Type                                                 |      419 |
+| Antibody Target                                              |      414 |
+| Fluorescent Labels                                           |      412 |
+| Fluorescent Label Reference DOIs                             |      412 |
+| PDX Metastatic Efficiency                                    |      408 |
+| Concentration (nanoMolar)                                    |      384 |
+| Development stage                                            |      373 |
+| Publication Figure                                           |      366 |
+| Smoking Status                                               |      336 |
+| Phenotype Outcome                                            |      336 |
+| CIS - Tumors                                                 |      336 |
+| Tissue Source                                                |      336 |
+| CIS - Area                                                   |      336 |
+| CIS - Lymphocytes                                            |      336 |
+| CIS - Stromals                                               |      336 |
+| Previous Lung Cancer                                         |      336 |
+| CIS - Other Cells                                            |      336 |
+| Processed image 2                                            |      335 |
+| Processed image 1                                            |      335 |
+| Pack Years                                                   |      312 |
+| Genetic Cross                                                |      304 |
+| Reporter                                                     |      300 |
+| METABRIC ID                                                  |      295 |
+| Stroma - Other Cells                                         |      291 |
+| Stroma - Lymphocytes                                         |      291 |
+| Stroma - Stromals                                            |      291 |
+| Stroma - Tumors                                              |      291 |
+| Stroma - Area                                                |      291 |
+| Growth Condition                                             |      233 |
+| Cell Identifier                                              |      229 |
+| Genomic Separation Of Operators                              |      229 |
+| Sampling Timepoint                                           |      227 |
+| Field                                                        |      227 |
+| Raw Data Capture                                             |      227 |
+| Treatment Timepoint                                          |      227 |
+| Clinical Information                                         |      227 |
+| Analysis Output                                              |      208 |
+| Probe Design                                                 |      208 |
+| Image File Comment                                           |      202 |
+| Age at Dx                                                    |      199 |
+| Patient Number                                               |      199 |
+| Core Number                                                  |      199 |
+| OS*                                                          |      199 |
+| RFS                                                          |      199 |
+| RFS*                                                         |      199 |
+| OS                                                           |      199 |
+| Intervention                                                 |      199 |
+| Sx Grade                                                     |      194 |
+| Medical Condition                                            |      193 |
+| IHC Staining                                                 |      193 |
+| Genetic Background Identifier                                |      192 |
+| T Stage                                                      |      190 |
+| Sx Tumor Size (cm)                                           |      190 |
+| LN                                                           |      190 |
+| InChI                                                        |      176 |
+| Tissue                                                       |      176 |
+| Based Treatment                                              |      176 |
+| Technical Replicate                                          |      176 |
+| Organism Part Comment                                        |      167 |
+| ChEMBL                                                       |      160 |
+| Selectivity                                                  |      156 |
+| Gene Expression CIS Region                                   |      153 |
+| Experimental Description                                     |      149 |
+| Time Point                                                   |      146 |
+| Image Quality Control                                        |      146 |
+| Assay Quality Control                                        |      146 |
+| BRCA Status                                                  |      126 |
+| Embryo Collection                                            |      126 |
+| Processed Data File                                          |      121 |
+| Imaging Comment                                              |      117 |
+| Image File Comments]                                         |      116 |
+| Number colonies on plate                                     |      115 |
+| CI Identifier                                                |      115 |
+| Demyelinated Corpus Callosum                                 |      110 |
+| Image File Type Comments                                     |      110 |
+| Methylation                                                  |      108 |
+| Organism Part Comments                                       |      103 |
+| Sample Description                                           |       96 |
+| Image Dimensions                                             |       96 |
+| Whole Genome Sequencing                                      |       93 |
+| Construct/Marker                                             |       80 |
+| Nanotomy URL                                                 |       74 |
+| Clearing                                                     |       74 |
+| Description                                                  |       74 |
+| Image File Type Comment                                      |       70 |
+| Embryo/Fetus ID                                              |       67 |
+| ChEBI                                                        |       64 |
+| BioSample URL                                                |       64 |
+| BioSample ID                                                 |       64 |
+| nPOD ID                                                      |       64 |
+| Phenotype 15 Term Accession                                  |       60 |
+| Entrez Gene Identifier                                       |       56 |
+| Gene Expression Stromal Region                               |       54 |
+| Imaging timepoint [h]                                        |       52 |
+| Image Acquisition and Feature Extraction Protocol            |       51 |
+| Growth Protocol                                              |       51 |
+| Selectivity Synonym                                          |       44 |
+| Source Image                                                 |       40 |
+| Phenotype 19 Term Name                                       |       40 |
+| Developmental Stage Description                              |       34 |
+| Treatment Protocol                                           |       33 |
+| Image Channels Comments                                      |       31 |
+| Density                                                      |       24 |
+| Cell Number                                                  |       24 |
+| Cell Sheet Radius                                            |       24 |
+| Protocol 3                                                   |       22 |
+| Experiment Comment                                           |       22 |
+| Genotype Comments                                            |       22 |
+| Segmented Image                                              |       20 |
+| Primary Antibody Dilution                                    |       20 |
+| Phenotype 3                                                  |       20 |
+| Secondary Antibody                                           |       20 |
+| Secondary Antibody Dilution                                  |       20 |
+| Secondary Antibody Identifier                                |       20 |
+| Segmentation Method                                          |       20 |
+| Segmented Channel                                            |       20 |
+| Embryo Orientation                                           |       20 |
+| Hybridization Probe                                          |       20 |
+| Genetic Cross Comments                                       |       20 |
+| Gene Expression Pattern                                      |       20 |
+| Genetic Modification                                         |       19 |
+| Experimental Results                                         |       19 |
+| 2 Deoxyglucose Treatment                                     |       18 |
+| Cholesterol Treatment                                        |       18 |
+| ROI Indexing Comment                                         |       18 |
+| Organism Part 2                                              |       18 |
+| Organism Part 1                                              |       18 |
+| ROI Z Size                                                   |       18 |
+| ROI Z Coordinate                                             |       18 |
+| ROI Y Size                                                   |       18 |
+| ROI Y Coordinate                                             |       18 |
+| ROI X Size                                                   |       18 |
+| ROI X Coordinate                                             |       18 |
+| Image Description Comment                                    |       17 |
+| Corresponding TEM ROIs                                       |       17 |
+| Secondary Name                                               |       16 |
+| Jax Mouse Line Comment                                       |       15 |
+| Strain Comment                                               |       15 |
+| Genotype Comment                                             |       15 |
+| Phenotype Description                                        |       14 |
+| ROI Original Dataset                                         |       12 |
+| Probe 1                                                      |       10 |
+| Wavelength                                                   |        7 |
+| Control Type Comment                                         |        6 |
+| Views Imaged for Multiview Reconstruction                    |        5 |
+| Labelled Cellular Structure                                  |        5 |
+| Voxel Dimensions                                             |        5 |
+| Primary Antibody 1                                           |        5 |
+| Transgenic Line                                              |        5 |
+| Primary Antibody 1 Dilution                                  |        5 |
+| Secondary Antibody 2 Dilution                                |        5 |
+| Primary Antibody 2                                           |        5 |
+| Primary Antibody 2 Dilution                                  |        5 |
+| Secondary Antibody 2                                         |        5 |
+| Secondary Antibody 1 Dilution                                |        5 |
+| Secondary Antibody 1                                         |        5 |
+| Time Interval                                                |        5 |
+| Glomeruli - number of false positives                        |        3 |
+| ROI Dimensions Comment                                       |        3 |
+| Glomeruli - number identified by machine learning            |        3 |
+| Glomeruli - number of false negatives estimated by sterology |        3 |
+| Image Note                                                   |        3 |
+| Reporter Comment                                             |        2 |
+| Infectious Agent                                             |        2 |
+| Mouse Age                                                    |        2 |
+| Analysis Note                                                |        2 |
+| Phenotype 20 Term Accession                                  |        1 |
+| Probe 2                                                      |        1 |
+| Intravenous Injection                                        |        1 |
+
+*** ttl wrapper
+:PROPERTIES:
+:ID:       e0b87ffd-c50d-4c2a-a583-ea30ed4e2387
+:END:
+#+name: ttl.idr.image.keys_usage
+#+begin_src ttl :tangle 007-image-keys-usage.ttl :exports none
+  <<ttl-prefixes>>
+  ex:003 a sh:SPARQLExecutable, sh:SPARQLSelectExecutable ;
+      rdfs:comment "Image map annotation keys and usage counts"^^rdf:HTML ;
+      sh:prefixes _:sparql_example_prefixes ;
+      schema:keywords "image, mapAnnotation, key, unique, count" ;
+      schema:target <<idr_sparql_endpoint_url>> ;
+      sh:select """
+  <<sparql.idr.image.key_usage>>
+  """ .
+#+end_src
+
 ** Map Annotation keys of a given image
 :PROPERTIES:
 :ID:       d7ad11ad-5cc8-409e-8dfe-11a321d2491e
