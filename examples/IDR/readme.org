@@ -1137,3 +1137,54 @@ in the "Gene Identifier" key-value annotation:
       <<sparql.idr-to-uniprot.protein_gene>>
       """
 #+end_src
+
+** All Gene Identifier URLs
+:PROPERTIES:
+:ID:       3243f0c6-bb8f-4482-b4ad-6d9b5a6ccf36
+:END:
+How many gene identifier URLs fail to resolve?
+
+*** SPARQL query
+:PROPERTIES:
+:ID:       3c62b8cd-a2f0-43aa-aa64-a63e66ddbcdd
+:END:
+#+name: sparql.idr.gene-identifiers
+#+begin_src sparql :results output text file :file gene_identifier_urls.txt
+  <<sparql-prefixes>>
+
+  select distinct ?url
+  where {
+    ?img a omecore:Image ;
+         omecore:hasAnnotation/omecore:mapEntry [omecore:key ?key; omecore:value ?url] .
+    values ?key {"Gene Identifier URL"}
+    }
+#+end_src
+
+#+RESULTS[50f3a25c981743eb394b20a2a828e6e0ac7cac2b]:
+[[file:gene_identifier_urls.txt]]
+
+*** Collect response code from gene identifier urls
+:PROPERTIES:
+:ID:       df9d6811-eadd-4dae-a54a-cd6a54f77d7e
+:END:
+#+begin_src bash :results file link :file response.txt :eval no
+  while read line; do curl -o /dev/null -s -w "%{http_code}\n" $line >> response.txt; done < gene_identifier_urls.txt 
+#+end_src
+
+*** ttl wrapper 
+:PROPERTIES:
+:ID:       7fcb7ff3-813e-400b-be47-b64d0ec95616
+:END:
+#+name: ttl.idr.gene-identifier-urls
+#+begin_src ttl :eval no :exports none :tangle 006-idr-gene-identifier-urls.ttl
+  <<ttl-prefixes>>
+
+  ex:006 a sh:SPARQLExecutable, sh:SPARQLSelectExecutable ;
+      rdfs:comment "Get all unique gene identifier urls."^^rdf:HTML ;
+      sh:prefixes _:sparql_example_prefixes ;
+      schema:keywords "image, gene, identifier, url, accessions, response" ;
+      schema:target <<idr_sparql_endpoint_url>> ;
+      sh:select """
+  <<sparql.idr.gene-identifiers>>
+  """ .
+#+end_src
