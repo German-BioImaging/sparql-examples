@@ -1,0 +1,57 @@
+@PREFIX dc: <http://purl.org/dc/elements/1.1/>
+@PREFIX dcterms: <http://purl.org/dc/terms/>
+@PREFIX ex: <https://sparql.uniprot.org/.well-known/sparql-examples/> .
+@PREFIX idr: <https://idr.openmicroscopy.org/>
+@PREFIX kv: <http://www.openmicroscopy.org/ns/default/>
+@PREFIX obda: <https://w3id.org/obda/vocabulary#>
+@PREFIX omecore: <https://ld.openmicroscopy.org/core/>
+@PREFIX omekg: <https://ld.openmicroscopy.org/omekg#>
+@PREFIX owl: <http://www.w3.org/2002/07/owl#>
+@PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@PREFIX schema: <https://schema.org/> .
+@PREFIX sh: <http://www.w3.org/ns/shacl#> .
+@PREFIX xml: <http://www.w3.org/XML/1998/namespace/>
+@PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+
+ex:005 a sh:SPARQLExecutable, sh:SPARQLSelectExecutable ;
+    rdfs:comment "Map image Gene Identifer URLs from Project:201 from TAIR accessions to uniprot protein IDs."^^rdf:HTML ;
+    sh:prefixes _:sparql_example_prefixes ;
+    schema:keywords "accessions, mapping, uniprot. arabidopsis thaliana" ;
+    schema:target <http://idr-sparql.uni-muenster.de/qlever/sparql> ;
+    sh:select """
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX dc: <http://purl.org/dc/elements/1.1/>
+PREFIX omecore: <https://ld.openmicroscopy.org/core/>
+PREFIX omekg: <https://ld.openmicroscopy.org/omekg#>
+PREFIX obda: <https://w3id.org/obda/vocabulary#>
+PREFIX xml: <http://www.w3.org/XML/1998/namespace/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX kv: <http://www.openmicroscopy.org/ns/default/>
+PREFIX idr: <https://idr.openmicroscopy.org/>
+PREFIX up: <http://purl.uniprot.org/core/>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX idrprj: <https://idr.openmicroscopy.org/Project/>
+prefix database: <http://purl.uniprot.org/database/>
+prefix taxon: <http://purl.uniprot.org/taxonomy/>
+
+select distinct ?tair_accession ?protein where {
+  idrprj:201 dcterms:hasPart/dcterms:hasPart ?img .
+  ?img omecore:hasAnnotation/omecore:mapEntry [omecore:key ?key; omecore:value ?gene_identifier] ;
+       ^dcterms:hasPart/^dcterms:hasPart ?prj .
+  values ?key {"Gene Identifier"}
+  bind(iri(concat("http://purl.uniprot.org/tair/", ?gene_identifier)) as ?tair_accession)
+
+  service <https://sparql.uniprot.org/sparql> {
+    ?protein a up:Protein;
+             rdfs:seeAlso ?tair_accession ;
+             up:organism taxon:3702 .
+    ?tair_accession up:database database:TAIR ;
+    }
+}
+limit 100
+""" .

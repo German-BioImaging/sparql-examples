@@ -20,10 +20,10 @@ the /ttl/ files, run =org-babel-tangle= in emacs.
 :ID:       62a37deb-cf19-46b5-acae-764cdfb04543
 :END:
 Here we define commonly used prefixes in =sparql= syntax to be included into
-=sparql= source code blocks by adding the line =<<idr-prefixes>>= somewhere in
+=sparql= source code blocks by adding the line =<<sparql-prefixes>>= somewhere in
 the block (probably somewhere near the top ;).
 
-#+name: idr-prefixes
+#+name: sparql-prefixes
 #+begin_src sparql :eval no
   PREFIX owl: <http://www.w3.org/2002/07/owl#>
   PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -105,7 +105,7 @@ Common prefixes in =ttl= syntax go here and can be included into =ttl= snippets 
 
 #+name: 001-sparql
 #+begin_src sparql :exports both
-  <<idr-prefixes>>
+  <<sparql-prefixes>>
 
   select ?project ?name ?id where {
     ?project a omecore:Project ;
@@ -121,7 +121,7 @@ Common prefixes in =ttl= syntax go here and can be included into =ttl= snippets 
 :ID:       b7228686-56a0-4c7c-959f-5cf8ab1565f3
 :END:
 #+begin_src sparql
-  <<idr-prefixes>>
+  <<sparql-prefixes>>
   select distinct ?project_property where {
     ?project a omecore:Project ;
              ?project_property ?val .
@@ -140,7 +140,395 @@ Common prefixes in =ttl= syntax go here and can be included into =ttl= snippets 
 | https://ld.openmicroscopy.org/core/experimenter       |
 | https://ld.openmicroscopy.org/core/hasAnnotation      |
 
+** Unique annotation keys 
+:PROPERTIES:
+:ID:       3ac9ffd4-1a54-443f-b1f9-4952a58d0779
+:END:
 
+
+*** SPARQL query
+:PROPERTIES:
+:ID:       7b33c079-ec1b-4a81-95d3-86c83b2580d8
+:END:
+#+name: sparql.idr.image.number_of_keys
+#+begin_src sparql
+  <<sparql-prefixes>>
+
+  select (count(distinct ?key) as ?nkey) where {
+    ?img a omecore:Image;
+         omecore:hasAnnotation/omecore:mapEntry/omecore:key ?key .
+    }
+#+end_src
+
+#+RESULTS[694bc3193a70080c55f6b69834a58764a231eaf2]: sparql.idr.image.keys
+| nkey |
+|------|
+|  549 |
+
+
+
+*** ttl wrapper
+:PROPERTIES:
+:ID:       e0b87ffd-c50d-4c2a-a583-ea30ed4e2387
+:END:
+#+name: ttl.idr.image.number_of_keys
+#+begin_src ttl :tangle 003-image-number-of-keys.ttl :exports none
+  <<ttl-prefixes>>
+  ex:003 a sh:SPARQLExecutable, sh:SPARQLSelectExecutable ;
+      rdfs:comment "Count the number of unique image map annotation keys"^^rdf:HTML ;
+      sh:prefixes _:sparql_example_prefixes ;
+      schema:keywords "image, mapAnnotation, key, unique, count" ;
+      schema:target <<idr_sparql_endpoint_url>> ;
+      sh:select """
+  <<sparql.idr.image.number_of_keys>>
+  """ .
+#+end_src
+
+
+** Map Annotation keys of a given image
+:PROPERTIES:
+:ID:       d7ad11ad-5cc8-409e-8dfe-11a321d2491e
+:END:
+List all keys used to annotate a given IDR image.
+
+
+*** SPARQL query
+:PROPERTIES:
+:ID:       9e35e6db-7ccf-424b-98f5-dfad747f08cc
+:END:
+#+name: sparql.idr.select_image.keys
+#+begin_src sparql
+  <<sparql-prefixes>>
+  PREFIX idrimage: <https://idr.openmicroscopy.org/Image/>
+
+  select distinct ?key where {
+    idrimage:1000000 omecore:hasAnnotation/omecore:mapEntry/omecore:key ?key
+    }
+#+end_src
+
+#+RESULTS[8ae1594c99207013bf06c6caf387afcd6adc6f0d]: sparql.idr.select_image.keys
+| key                                                   |
+|-------------------------------------------------------|
+| Cell Line                                             |
+| Channels                                              |
+| Gene Identifier                                       |
+| Gene Identifier URL                                   |
+| Gene Symbol                                           |
+| hORFeome V5.1 Clone Description                       |
+| ORF Comments                                          |
+| ORF Identifier                                        |
+| ORF Identifier URL                                    |
+| Organism                                              |
+| Scored As Nuclear Foci At Initial Stage               |
+| Subcellular Localization Based On Secondary Screening |
+
+
+*** ttl wrapper                                                    :noexport:
+:PROPERTIES:
+:ID:       1b3cd5f4-c1ad-4b82-b5b6-fd3678ed43b7
+:END:
+#+name: ttl.idr.select_image.keys
+
+#+begin_src ttl :tangle 004-image-keys.ttl :exports none
+  <<ttl-prefixes>>
+
+  ex:004 a sh:SPARQLExecutable, sh:SPARQLSelectExecutable ;
+      rdfs:comment "Map annotation keys for IDR Image:1000000"^^rdf:HTML ;
+      sh:prefixes _:sparql_example_prefixes ;
+      schema:keywords "image, mapAnnotation, keys" ;
+      schema:target <<idr_sparql_endpoint_url>> ;
+      sh:select """
+  <<sparql.idr.select_image.keys>>
+  """ .
+#+end_src
+
+
+** Unique Gene Symbols
+:PROPERTIES:
+:ID:       89685530-193c-4c77-a7d6-8200ea34057a
+:END:
+Which genes are referenced in the IDR?
+
+
+
+*** SPARQL query
+:PROPERTIES:
+:ID:       d914e4f9-988e-4729-8650-b83e812fd1dd
+:END:
+#+name: sparql.idr.image.gene_symbols
+#+begin_src sparql
+  <<sparql-prefixes>>
+
+  select distinct ?prj ?img ?gene_identifier where {
+    ?img a omecore:Image ;
+         omecore:hasAnnotation/omecore:mapEntry [omecore:key ?key; omecore:value ?gene_identifier] ;
+         ^dcterms:hasPart/^dcterms:hasPart ?prj .
+    values ?key {"Gene Identifier URL"}
+    filter(strstarts(?gene_identifier, "http://arabidopsis.org"))
+  }
+  limit 100
+#+end_src
+
+#+RESULTS[a21f62cc3edb338ff349f066591e7b8fb0b5ba31]: sparql.idr.image.gene_symbols
+| prj                                        | img                                          | gene_identifier                                                      |
+|--------------------------------------------+----------------------------------------------+----------------------------------------------------------------------|
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125701 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G02720 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125703 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G02720 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125705 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G02720 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125707 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G02720 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125709 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G02730 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125711 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G02730 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125713 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G02730 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125715 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G02730 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125717 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G03520 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125719 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G03520 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125721 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G03520 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125723 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G03520 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125725 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G05170 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125726 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G05170 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125727 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G05170 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125728 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G05570 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125730 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G05570 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125732 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G05570 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125734 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G05570 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125736 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G06780 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125737 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G06780 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125738 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G06780 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125739 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G06780 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125740 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G08280 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125742 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G08280 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125744 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G08280 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125746 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G08280 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125748 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G08660 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125750 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G08660 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125752 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G08660 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125754 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G08660 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125756 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G11730 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125758 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G11730 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125760 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G11730 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125762 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G11730 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125764 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G13250 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125766 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G13250 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125768 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G13250 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125770 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G13250 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125772 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G14070 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125773 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G14070 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125774 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G14070 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125775 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G14070 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125776 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G14590 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125778 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G14590 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125780 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G14590 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125782 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G14590 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125784 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G18580 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125786 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G18580 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125788 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G18580 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125790 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G18580 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125792 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G18690 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125793 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G18690 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125794 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G18690 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125795 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G18690 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125796 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G19360 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125798 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G19360 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125800 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G19360 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125802 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G19360 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125804 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G20575 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125806 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G20575 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125808 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G20575 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125810 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G20575 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125812 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G21480 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125814 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G21480 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125816 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G21480 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125818 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G21480 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125820 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G24070 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125822 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G24070 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125824 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G24070 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125826 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G24070 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125828 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G24170 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125830 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G24170 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125832 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G24170 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125834 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G24170 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125836 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G27440 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125838 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G27440 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125840 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G27440 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125842 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G27440 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125844 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G27600 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125846 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G27600 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125848 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G27600 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125850 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G27600 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125852 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G32930 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125854 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G32930 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125856 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G32930 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125858 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G32930 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125860 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G33250 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125862 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G33250 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125864 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G33250 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125866 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G33250 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125868 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G53290 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125870 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G53290 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125872 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G53290 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125874 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G70090 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125876 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G70090 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125878 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G70090 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125880 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G70090 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125882 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G70630 |
+| https://idr.openmicroscopy.org/Project/201 | https://idr.openmicroscopy.org/Image/3125884 | http://arabidopsis.org/servlets/TairObject?type=locus&name=AT1G70630 |
+
+** Map TAIR accessions to uniprot
+:PROPERTIES:
+:ID:       8a927d9b-97df-4fc6-9a31-0757d6cdf499
+:END:
+Gene Identifier URLs sometimes fail to resolve because of errors in resolution or because of paywall restrictions. An example is
+the Arabidopsis Thaliana Internet Resource (https://arabidopsis.org, TAIR). This query translates TAIR accessions to uniprot IDs.
+
+*** SPARQL query
+:PROPERTIES:
+:ID:       7d950dd6-f463-49a7-a3ef-27f8cc01bb6d
+:END:
+#+name: sparql.idr.tair2uniprot
+#+begin_src sparql
+  <<sparql-prefixes>>
+  PREFIX idrprj: <https://idr.openmicroscopy.org/Project/>
+  prefix database: <http://purl.uniprot.org/database/>
+  prefix taxon: <http://purl.uniprot.org/taxonomy/>
+
+  select distinct ?tair_accession ?protein where {
+    idrprj:201 dcterms:hasPart/dcterms:hasPart ?img .
+    ?img omecore:hasAnnotation/omecore:mapEntry [omecore:key ?key; omecore:value ?gene_identifier] ;
+         ^dcterms:hasPart/^dcterms:hasPart ?prj .
+    values ?key {"Gene Identifier"}
+    bind(iri(concat("http://purl.uniprot.org/tair/", ?gene_identifier)) as ?tair_accession)
+
+    service <https://sparql.uniprot.org/sparql> {
+      ?protein a up:Protein;
+               rdfs:seeAlso ?tair_accession ;
+               up:organism taxon:3702 .
+      ?tair_accession up:database database:TAIR ;
+      }
+  }
+  limit 100
+#+end_src
+
+#+RESULTS[d4d664d144eaea3061eb3e0a08769afc3bc11c7e]:
+| tair_accession                         | protein                                    |
+|----------------------------------------+--------------------------------------------|
+| http://purl.uniprot.org/tair/AT1G02720 | http://purl.uniprot.org/uniprot/Q9FWY9     |
+| http://purl.uniprot.org/tair/AT1G02720 | http://purl.uniprot.org/uniprot/W8Q7E9     |
+| http://purl.uniprot.org/tair/AT1G02730 | http://purl.uniprot.org/uniprot/Q9SRW9     |
+| http://purl.uniprot.org/tair/AT1G02730 | http://purl.uniprot.org/uniprot/W8QPC8     |
+| http://purl.uniprot.org/tair/AT1G03520 | http://purl.uniprot.org/uniprot/A8MQE8     |
+| http://purl.uniprot.org/tair/AT1G03520 | http://purl.uniprot.org/uniprot/Q9LR71     |
+| http://purl.uniprot.org/tair/AT1G05170 | http://purl.uniprot.org/uniprot/A0A2H1ZEA5 |
+| http://purl.uniprot.org/tair/AT1G05170 | http://purl.uniprot.org/uniprot/A8MRC7     |
+| http://purl.uniprot.org/tair/AT1G05170 | http://purl.uniprot.org/uniprot/W8Q3U9     |
+| http://purl.uniprot.org/tair/AT1G05570 | http://purl.uniprot.org/uniprot/F4I8T3     |
+| http://purl.uniprot.org/tair/AT1G05570 | http://purl.uniprot.org/uniprot/Q9AUE0     |
+| http://purl.uniprot.org/tair/AT1G06780 | http://purl.uniprot.org/uniprot/F4IDS0     |
+| http://purl.uniprot.org/tair/AT1G06780 | http://purl.uniprot.org/uniprot/Q9M9Y5     |
+| http://purl.uniprot.org/tair/AT1G06780 | http://purl.uniprot.org/uniprot/W8PW41     |
+| http://purl.uniprot.org/tair/AT1G08280 | http://purl.uniprot.org/uniprot/Q9SGD2     |
+| http://purl.uniprot.org/tair/AT1G08660 | http://purl.uniprot.org/uniprot/A0A1P8AM36 |
+| http://purl.uniprot.org/tair/AT1G08660 | http://purl.uniprot.org/uniprot/F4HXN8     |
+| http://purl.uniprot.org/tair/AT1G08660 | http://purl.uniprot.org/uniprot/Q8VZJ0     |
+| http://purl.uniprot.org/tair/AT1G11730 | http://purl.uniprot.org/uniprot/Q9SAA4     |
+| http://purl.uniprot.org/tair/AT1G11730 | http://purl.uniprot.org/uniprot/W8Q7D4     |
+| http://purl.uniprot.org/tair/AT1G13250 | http://purl.uniprot.org/uniprot/Q0V7R1     |
+| http://purl.uniprot.org/tair/AT1G13250 | http://purl.uniprot.org/uniprot/W8Q3T2     |
+| http://purl.uniprot.org/tair/AT1G14070 | http://purl.uniprot.org/uniprot/Q9XI81     |
+| http://purl.uniprot.org/tair/AT1G14590 | http://purl.uniprot.org/uniprot/Q6DBI2     |
+| http://purl.uniprot.org/tair/AT1G14590 | http://purl.uniprot.org/uniprot/Q9MA24     |
+| http://purl.uniprot.org/tair/AT1G18580 | http://purl.uniprot.org/uniprot/Q949Q1     |
+| http://purl.uniprot.org/tair/AT1G18690 | http://purl.uniprot.org/uniprot/Q9M9U0     |
+| http://purl.uniprot.org/tair/AT1G19360 | http://purl.uniprot.org/uniprot/Q9LN62     |
+| http://purl.uniprot.org/tair/AT1G20575 | http://purl.uniprot.org/uniprot/Q9LM93     |
+| http://purl.uniprot.org/tair/AT1G21480 | http://purl.uniprot.org/uniprot/F4HY10     |
+| http://purl.uniprot.org/tair/AT1G21480 | http://purl.uniprot.org/uniprot/F4HY11     |
+| http://purl.uniprot.org/tair/AT1G24070 | http://purl.uniprot.org/uniprot/A0A068FJK1 |
+| http://purl.uniprot.org/tair/AT1G24070 | http://purl.uniprot.org/uniprot/A0A1P8AMK2 |
+| http://purl.uniprot.org/tair/AT1G24070 | http://purl.uniprot.org/uniprot/Q9LR87     |
+| http://purl.uniprot.org/tair/AT1G24170 | http://purl.uniprot.org/uniprot/O48684     |
+| http://purl.uniprot.org/tair/AT1G24170 | http://purl.uniprot.org/uniprot/W8PW12     |
+| http://purl.uniprot.org/tair/AT1G27440 | http://purl.uniprot.org/uniprot/Q9FZJ1     |
+| http://purl.uniprot.org/tair/AT1G27600 | http://purl.uniprot.org/uniprot/Q9SXC4     |
+| http://purl.uniprot.org/tair/AT1G27600 | http://purl.uniprot.org/uniprot/W8PW09     |
+| http://purl.uniprot.org/tair/AT1G32930 | http://purl.uniprot.org/uniprot/Q9MAP8     |
+| http://purl.uniprot.org/tair/AT1G33250 | http://purl.uniprot.org/uniprot/Q9C881     |
+| http://purl.uniprot.org/tair/AT1G53290 | http://purl.uniprot.org/uniprot/Q8L7M1     |
+| http://purl.uniprot.org/tair/AT1G53290 | http://purl.uniprot.org/uniprot/W8Q798     |
+| http://purl.uniprot.org/tair/AT1G70090 | http://purl.uniprot.org/uniprot/O04536     |
+| http://purl.uniprot.org/tair/AT1G70090 | http://purl.uniprot.org/uniprot/W8Q3M8     |
+| http://purl.uniprot.org/tair/AT1G70630 | http://purl.uniprot.org/uniprot/A0A1P8ASV0 |
+| http://purl.uniprot.org/tair/AT1G70630 | http://purl.uniprot.org/uniprot/A0A1P8ASW3 |
+| http://purl.uniprot.org/tair/AT1G70630 | http://purl.uniprot.org/uniprot/A0A1P8ASW5 |
+| http://purl.uniprot.org/tair/AT1G70630 | http://purl.uniprot.org/uniprot/A0A1P8ASZ1 |
+| http://purl.uniprot.org/tair/AT1G70630 | http://purl.uniprot.org/uniprot/A0A1P8AT04 |
+| http://purl.uniprot.org/tair/AT1G70630 | http://purl.uniprot.org/uniprot/F4I6V0     |
+| http://purl.uniprot.org/tair/AT1G71070 | http://purl.uniprot.org/uniprot/Q9C9A1     |
+| http://purl.uniprot.org/tair/AT1G74380 | http://purl.uniprot.org/uniprot/Q9CA75     |
+| http://purl.uniprot.org/tair/AT1G74420 | http://purl.uniprot.org/uniprot/A0A1P8AN91 |
+| http://purl.uniprot.org/tair/AT1G74420 | http://purl.uniprot.org/uniprot/A0A1P8ANB1 |
+| http://purl.uniprot.org/tair/AT1G74420 | http://purl.uniprot.org/uniprot/F4HVN0     |
+| http://purl.uniprot.org/tair/AT1G74420 | http://purl.uniprot.org/uniprot/Q56YH9     |
+| http://purl.uniprot.org/tair/AT1G74420 | http://purl.uniprot.org/uniprot/Q9CA71     |
+| http://purl.uniprot.org/tair/AT1G74420 | http://purl.uniprot.org/uniprot/W8Q3K1     |
+| http://purl.uniprot.org/tair/AT1G74680 | http://purl.uniprot.org/uniprot/Q93ZD5     |
+| http://purl.uniprot.org/tair/AT1G74800 | http://purl.uniprot.org/uniprot/Q8RX55     |
+| http://purl.uniprot.org/tair/AT1G75110 | http://purl.uniprot.org/uniprot/Q9C9Q5     |
+| http://purl.uniprot.org/tair/AT1G75120 | http://purl.uniprot.org/uniprot/Q9C9Q6     |
+| http://purl.uniprot.org/tair/AT1G77130 | http://purl.uniprot.org/uniprot/Q8W4A7     |
+| http://purl.uniprot.org/tair/AT1G77130 | http://purl.uniprot.org/uniprot/W8Q752     |
+| http://purl.uniprot.org/tair/AT2G02060 | http://purl.uniprot.org/uniprot/A0A1P8B1K3 |
+| http://purl.uniprot.org/tair/AT2G02060 | http://purl.uniprot.org/uniprot/Q7X887     |
+| http://purl.uniprot.org/tair/AT2G02060 | http://purl.uniprot.org/uniprot/Q9MAN4     |
+| http://purl.uniprot.org/tair/AT2G03220 | http://purl.uniprot.org/uniprot/Q9SWH5     |
+| http://purl.uniprot.org/tair/AT2G03220 | http://purl.uniprot.org/uniprot/W8PV36     |
+| http://purl.uniprot.org/tair/AT2G20370 | http://purl.uniprot.org/uniprot/Q7XJ98     |
+| http://purl.uniprot.org/tair/AT2G20810 | http://purl.uniprot.org/uniprot/Q9SKT6     |
+| http://purl.uniprot.org/tair/AT2G20810 | http://purl.uniprot.org/uniprot/W8PV18     |
+| http://purl.uniprot.org/tair/AT2G22900 | http://purl.uniprot.org/uniprot/O81007     |
+| http://purl.uniprot.org/tair/AT2G24630 | http://purl.uniprot.org/uniprot/Q9SJA2     |
+| http://purl.uniprot.org/tair/AT2G24630 | http://purl.uniprot.org/uniprot/W8Q3F7     |
+| http://purl.uniprot.org/tair/AT2G25300 | http://purl.uniprot.org/uniprot/A0A1P8B0G1 |
+| http://purl.uniprot.org/tair/AT2G25300 | http://purl.uniprot.org/uniprot/Q5XEZ1     |
+| http://purl.uniprot.org/tair/AT2G25300 | http://purl.uniprot.org/uniprot/W8Q717     |
+| http://purl.uniprot.org/tair/AT2G26100 | http://purl.uniprot.org/uniprot/A0A1P8B0L1 |
+| http://purl.uniprot.org/tair/AT2G26100 | http://purl.uniprot.org/uniprot/Q66GS2     |
+| http://purl.uniprot.org/tair/AT2G26100 | http://purl.uniprot.org/uniprot/W8PV11     |
+| http://purl.uniprot.org/tair/AT2G31960 | http://purl.uniprot.org/uniprot/A0A1P8AXZ6 |
+| http://purl.uniprot.org/tair/AT2G31960 | http://purl.uniprot.org/uniprot/Q9SL03     |
+| http://purl.uniprot.org/tair/AT2G31990 | http://purl.uniprot.org/uniprot/A0A1P8AZR3 |
+| http://purl.uniprot.org/tair/AT2G31990 | http://purl.uniprot.org/uniprot/A0A1P8AZT3 |
+| http://purl.uniprot.org/tair/AT2G31990 | http://purl.uniprot.org/uniprot/Q5XF04     |
+| http://purl.uniprot.org/tair/AT2G32430 | http://purl.uniprot.org/uniprot/Q9ZV71     |
+| http://purl.uniprot.org/tair/AT2G32430 | http://purl.uniprot.org/uniprot/W8PUZ8     |
+| http://purl.uniprot.org/tair/AT2G33570 | http://purl.uniprot.org/uniprot/O22807     |
+| http://purl.uniprot.org/tair/AT2G35100 | http://purl.uniprot.org/uniprot/Q6DBG8     |
+| http://purl.uniprot.org/tair/AT2G35610 | http://purl.uniprot.org/uniprot/Q8VXZ5     |
+| http://purl.uniprot.org/tair/AT2G35650 | http://purl.uniprot.org/uniprot/A0A1P8B2I0 |
+| http://purl.uniprot.org/tair/AT2G35650 | http://purl.uniprot.org/uniprot/A0A1P8B2I3 |
+| http://purl.uniprot.org/tair/AT2G35650 | http://purl.uniprot.org/uniprot/Q9ZQN8     |
+| http://purl.uniprot.org/tair/AT2G35650 | http://purl.uniprot.org/uniprot/W8PUY9     |
+| http://purl.uniprot.org/tair/AT2G36850 | http://purl.uniprot.org/uniprot/Q9SJM0     |
+| http://purl.uniprot.org/tair/AT2G38650 | http://purl.uniprot.org/uniprot/A0A1P8AX74 |
+| http://purl.uniprot.org/tair/AT2G38650 | http://purl.uniprot.org/uniprot/Q9ZVI7     |
+| http://purl.uniprot.org/tair/AT2G38650 | http://purl.uniprot.org/uniprot/W8Q6X1     |
+
+*** ttl wrapper
+:PROPERTIES:
+:ID:       61abe123-b04d-4eb4-9963-3137adf935e1
+:END:
+#+name: ttl.idr.tair2uniprot
+#+begin_src ttl :exports none :eval no :tangle 005-idr-tair2uniprot.ttl
+  <<ttl-prefixes>>
+
+  ex:005 a sh:SPARQLExecutable, sh:SPARQLSelectExecutable ;
+      rdfs:comment "Map image Gene Identifer URLs from Project:201 from TAIR accessions to uniprot protein IDs."^^rdf:HTML ;
+      sh:prefixes _:sparql_example_prefixes ;
+      schema:keywords "accessions, mapping, uniprot. arabidopsis thaliana" ;
+      schema:target <<idr_sparql_endpoint_url>> ;
+      sh:select """
+  <<sparql.idr.tair2uniprot>>
+  """ .
+#+end_src
 ** Gene annotations and federation to uniprot
 :PROPERTIES:
 :ID:       22fb3c6f-c693-4d57-9f12-8fb3c51cd478
@@ -163,7 +551,7 @@ the gene identifiers, e.g.
 This enables queries to Uniprot that find a protein encoded by a gene with a given gene identifier:
 #+name: sparql.uniprot.protein_gene
 #+begin_src sparql :url https://sparql.uniprot.org/sparql :cache no :eval no-export
-  <<idr-prefixes>>
+  <<sparql-prefixes>>
   prefix bgee: <http://purl.uniprot.org/bgee/>
 
   select distinct ?up_protein  where {
@@ -186,7 +574,7 @@ in the "Gene Identifier" key-value annotation:
 
 #+name: sparql.idr-to-uniprot.protein_gene
     #+begin_src sparql
-      <<idr-prefixes>>
+      <<sparql-prefixes>>
       prefix bgee: <http://purl.uniprot.org/bgee/>
 
       select distinct ?img ?bgee ?up_protein where {
